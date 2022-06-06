@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Setting } from './setting';
 import { MapContent } from './components/mapcontent';
 import AMapLoader from '@amap/amap-jsapi-loader';
+import { useCloudStorage } from '@vikadata/widget-sdk';
 
 
 declare global {
@@ -17,19 +18,23 @@ declare global {
   }
 }
 
-// 地图安全密钥
-const securityCode = '41d2e666297c21beda8897b2dfecc92f';
-// 高德地图api key
-const apiKey = '5b625cd96fdd79c2918cf5ec2cd7720c';
 
-//设置地图安全密钥
-window['_AMapSecurityConfig'] = {
-  securityJsCode: securityCode,
-}
 
 export const MapComponent: React.FC = () => {
   // 插件加载状态
   const [pluginStatus, setPluginstatus] = useState(false);
+
+  const [apiKey] = useCloudStorage('apiKey')
+  const [securityCode] = useCloudStorage<string>('securityCode');
+
+  //设置地图安全密钥
+  // TODO 使用useEffect还是useMount
+  useEffect(() => {
+    window._AMapSecurityConfig = {
+      securityJsCode: securityCode,
+    }
+  },[securityCode]);
+  
 
   function initMap() {
     

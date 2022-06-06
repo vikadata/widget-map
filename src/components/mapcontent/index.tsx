@@ -48,8 +48,8 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
   const [recordsData, setRecordsdata] = useState<any>();
   const expandRecord = useExpandRecord();
 
-  const [infoWindowList] = useCloudStorage<Array<InfolistType>>('infoWindowList');
-  const [infoWindowListStatus] = useCloudStorage<boolean>('infoWindowListStatus');
+  const [mapSettingList] = useCloudStorage<Array<InfolistType>>('mapSettingList');
+  const [mapSettingListStatus] = useCloudStorage<boolean>('mapSettingListStatus');
   
   // 中心标点
   const [markerCenterLayer, setMarkerCenterLayer] = useState<any>();
@@ -91,10 +91,10 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
 
   // 地址处理
   useEffect(function getAddressList() {
-    if(!infoWindowListStatus) {
+    if(!mapSettingListStatus) {
       return;
     }
-    const infoListObj = infoWindowList.reduce((pre, current, index) => {
+    const infoListObj = mapSettingList.reduce((pre, current, index) => {
       if(index === 1) {
         const obj = {
           [pre.text] : pre.value
@@ -117,7 +117,7 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
       });
     
     setRecordsdata(recordsData);
-  },[records, infoWindowListStatus, infoWindowList]);
+  },[records, mapSettingListStatus, mapSettingList]);
 
   // 创建中心点坐标
   useEffect(function setCenter(){
@@ -131,11 +131,11 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
  
   // 根据表格设置所有地图点
   useEffect(function drawAddress() {
-    if (!pluginStatus || !recordsData  || !infoWindowListStatus) {
+    if (!pluginStatus || !recordsData  || !mapSettingListStatus) {
       return;
     }
     markAddress(recordsData, markersLayer, expandRecord);
-  }, [recordsData, pluginStatus, infoWindowListStatus]);
+  }, [recordsData, pluginStatus, mapSettingListStatus]);
 
   /* 创建标记点 
   record: 标点信息

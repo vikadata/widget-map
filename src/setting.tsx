@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useFields,  } from '@vikadata/widget-sdk';
-import { Box, Select, Button } from '@vikadata/components';
+import { Box, Select, Button, TextInput } from '@vikadata/components';
 import style from './setting.module.css';
 
 
@@ -12,12 +12,11 @@ interface InfolistType{
 export const Setting: React.FC = () => {
   const [isSettingOpened] = useSettingsButton();
   const [viewId, setViewId] = useCloudStorage<string>('selectedViewId');
-  
-  const [infoWindowList, setInfoWindowList] = useCloudStorage<Array<InfolistType>>('infoWindowList', [{ text: '地址', value: ''}, { text: '名称', value: ''}]);
-
-  const [infoWindowListStatus, setInfoWindowListStatus] = useCloudStorage<boolean>('infoWindowListStatus', false);
-  
+  const [mapSettingList, setMapSettingList] = useCloudStorage<Array<InfolistType>>('mapSettingList', [{ text: '地址', value: ''}, { text: '名称', value: ''}]);
+  const [mapSettingListStatus, setMapSettingListStatus] = useCloudStorage<boolean>('mapSettingListStatus', false);
   const [addressType, setAddressType] = useCloudStorage<string | number>('addressType', 'text');
+  const [apiKey, setApiKey] = useCloudStorage<string>('apiKey');
+  const [securityCode, setSecurityCode] = useCloudStorage<string>('securityCode');
 
   const addressTypeOption = [
     {
@@ -32,21 +31,21 @@ export const Setting: React.FC = () => {
 
   // 更新配置选项
   function updateInfoList(index: number, type: string, data: string) {
-    let newInfoWindowList = infoWindowList;
+    let newInfoWindowList = mapSettingList;
     newInfoWindowList[index][type] = data;
-    setInfoWindowList([...newInfoWindowList]);
+    setMapSettingList([...newInfoWindowList]);
   }
 
   // 确认配置选项
-  function confirmInfoWindow() {
-    setInfoWindowListStatus(false);
+  function confirmMapSetting() {
+    setMapSettingListStatus(false);
     let check = true;
-    infoWindowList.forEach(formItem => {
+    mapSettingList.forEach(formItem => {
       if(formItem.text === '' || formItem.value === '' ) {
         check = false;
       }
     });
-    setInfoWindowListStatus(check);
+    setMapSettingListStatus(check);
   }
 
   return isSettingOpened ? (
@@ -67,6 +66,22 @@ export const Setting: React.FC = () => {
           borderBottom="2px solid lightgrey"
         >
           <div className={style.formItem}>
+            <h3>填写API Key</h3>
+            <TextInput 
+              block
+              type="password"
+              value={apiKey}
+              placeholder="请输入API Key"
+              onChange={e => setApiKey(e.target.value)}
+            />
+            <h3>填写API Key安全密钥</h3>
+            <TextInput 
+              block
+              type="password"
+              value={securityCode}
+              placeholder="请输入API Key安全密钥"
+              onChange={e => setSecurityCode(e.target.value)}
+            />
             <h3>选择地址字段类型</h3>
             <Select options={addressTypeOption}
               value={addressType}
@@ -74,12 +89,12 @@ export const Setting: React.FC = () => {
                 setAddressType(option.value);
               }} />
             <h3>选择地址字段</h3>
-            <FieldPicker  viewId={viewId} fieldId={infoWindowList[0].value} onChange={option => updateInfoList( 0,  'value', option.value)} />
+            <FieldPicker  viewId={viewId} fieldId={mapSettingList[0].value} onChange={option => updateInfoList( 0,  'value', option.value)} />
             <h3>选择名称字段</h3>
-            <FieldPicker  viewId={viewId} fieldId={infoWindowList[1].value} onChange={option => updateInfoList( 1,  'value', option.value)} />
+            <FieldPicker  viewId={viewId} fieldId={mapSettingList[1].value} onChange={option => updateInfoList( 1,  'value', option.value)} />
           </div>
           <div className={style.buttonContent}>
-            <Button className={style.marginType} variant="jelly" color="primary" block  onClick={confirmInfoWindow}>确认</Button>
+            <Button className={style.marginType} variant="jelly" color="primary" block  onClick={confirmMapSetting}>确认</Button>
           </div>
         </Box>
         </div>

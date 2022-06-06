@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useFields,  } from '@vikadata/widget-sdk';
 import { Box, Select, Button, TextInput } from '@vikadata/components';
-import style from './setting.module.css';
+import styles from './setting.module.less';
 
 
 interface InfolistType{
@@ -65,7 +65,7 @@ export const Setting: React.FC = () => {
           padding="30px 10px 30px 10px"
           borderBottom="2px solid lightgrey"
         >
-          <div className={style.formItem}>
+          <div className={styles.formItem}>
             <h3>填写API Key</h3>
             <TextInput 
               block
@@ -93,8 +93,8 @@ export const Setting: React.FC = () => {
             <h3>选择名称字段</h3>
             <FieldPicker  viewId={viewId} fieldId={mapSettingList[1].value} onChange={option => updateInfoList( 1,  'value', option.value)} />
           </div>
-          <div className={style.buttonContent}>
-            <Button className={style.marginType} variant="jelly" color="primary" block  onClick={confirmMapSetting}>确认</Button>
+          <div className={styles.buttonContent}>
+            <Button className={styles.marginType} variant="jelly" color="primary" block  onClick={confirmMapSetting}>确认</Button>
           </div>
         </Box>
         </div>

@@ -3,7 +3,7 @@ import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord } from '@vi
 import { getLocationAsync } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput } from '@vikadata/components';
-import style from './index.module.css';
+import styles from './style.module.less';
 
 
 interface mapContentProps {
@@ -218,9 +218,9 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <div id="container" style={{ width: '100%', height: '100%' }}>
-          <div className={style.searchContent}>
+          <div className={styles.searchContent}>
               <TextInput
-                className={style.searchInput}
+                className={styles.searchInput}
                 placeholder="请输入内容"
                 size="small"
                 id="searchInput"

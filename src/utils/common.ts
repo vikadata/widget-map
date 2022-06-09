@@ -18,6 +18,21 @@ function getLocationAsync(record: any) {
   });
 }
 
+// 根据地址数组获取去高德地图定位点
+function getLocationArrayAsync(records: any) {
+  return new Promise((resolve, reject) => {
+    window.Geocoder.getLocation(records, function(status, result) {
+      if (status === 'complete' && result.info === 'OK') {
+        // const { lng, lat} = result.geocodes[0].location;
+        resolve(result.geocodes);
+      } else {
+        resolve([]);
+      }
+    });
+   
+  });
+}
+
 // 创建路劲规划
 async function creatTransfer(pointA, pointB) {
  
@@ -33,4 +48,4 @@ async function creatTransfer(pointA, pointB) {
   });
 }
 
-export { getLocationAsync, creatTransfer }
+export { getLocationAsync, creatTransfer, getLocationArrayAsync }

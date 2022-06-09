@@ -57,7 +57,8 @@ export const MapComponent: React.FC = () => {
       panel: 'commute'
     });
     window.Geocoder = new window.AMap.Geocoder({
-      city: '全国'
+      city: '全国',
+      batch: true
     });
 
     const autoOptions = {

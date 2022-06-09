@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord } from '@vikadata/widget-sdk';
-import { getLocationAsync } from '../../utils/common';
+import { getLocationArrayAsync } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput } from '@vikadata/components';
 import styles from './style.module.less';
@@ -186,8 +186,17 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
       
 
       if(addressType === 'text') {
-        const asyncRecords = recordsData.map(record => getLocationAsync(record));
-        recordsRes = await Promise.all(asyncRecords);
+        const recordsAddress = recordsData.map(record => record['地址']).filter(Boolean);
+        const locationList : any = await getLocationArrayAsync(recordsAddress);
+        console.log('locationList', locationList);
+        recordsRes = locationList.map((item, index) => {
+            return {
+              location: item ? { lng: item.location.lng, lat: item.location.lat} : null,
+              ...recordsData[index]
+            }
+        });
+        // const asyncRecords = recordsData.map(record => getLocationAsync(record));
+        // recordsRes = await Promise.all(asyncRecords);
       } else if(addressType === 'latlng') {
         recordsRes = recordsData.map( record => {
           const lonlat = record['地址'] ? record['地址'].split(',') : '';

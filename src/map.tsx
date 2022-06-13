@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Setting } from './setting';
 import { MapContent } from './components/mapcontent';
 import AMapLoader from '@amap/amap-jsapi-loader';
-import { useCloudStorage } from '@vikadata/widget-sdk';
 
 
 declare global {
@@ -14,38 +13,27 @@ declare global {
     Transfer: any, // 路线规划
     amap: any, // 地图实例
     infoWindow: any, // 信息弹窗实例
-    AutoComplete: any
+    AutoComplete: any,
+    _AMapSecurityConfig: any
   }
 }
 
-
+window._AMapSecurityConfig = {
+  securityJsCode: '41d2e666297c21beda8897b2dfecc92f',
+}
 
 export const MapComponent: React.FC = () => {
   // 插件加载状态
   const [pluginStatus, setPluginstatus] = useState(false);
 
-  const [apiKey] = useCloudStorage('apiKey')
-  const [securityCode] = useCloudStorage<string>('securityCode');
-
-  //设置地图安全密钥
-  // TODO 使用useEffect还是useMount
-  useEffect(() => {
-    window._AMapSecurityConfig = {
-      securityJsCode: securityCode,
-    }
-  },[securityCode]);
-  
-
   function initMap() {
-    
+   
     const amap = new window.AMap.Map('container', {
       zoom: 12,//级别
       viewMode: '2D',//使用3D视图
       mapStyle: 'amap://styles/b379277160c9c3ce520627ad2e4bd22c'
     });
-    // amap.addControl(new window.AMap.ToolBar());
-    // 在图面添加鹰眼控件，在地图右下角显示地图的缩略图
-    amap.addControl(new window.AMap.HawkEye({isOpen:true}));
+    amap.addControl(new window.AMap.ToolBar());
     window.amap = amap;
     window.Transfer = new window.AMap.Transfer({
       // city 指定进行编码查询的城市，支持传入城市名、adcode 和 citycode
@@ -79,13 +67,12 @@ export const MapComponent: React.FC = () => {
       return;
     }
     AMapLoader.load({
-      "key": apiKey,
+      "key": '5b625cd96fdd79c2918cf5ec2cd7720c',
       "version": "2.0",
       "plugins":[
         'AMap.Geocoder', 
         "AMap.Transfer", 
         "AMap.ToolBar", 
-        "AMap.HawkEye",
         "AMap.AutoComplete",
         "AMap.PlaceSearch",
         "AMap.MarkerClusterer"
@@ -103,7 +90,7 @@ export const MapComponent: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', height: '100%' }}>
-      <div style={{ flexGrow: 1, overflow: 'auto', padding: '0 8px'}}>
+      <div style={{ flexGrow: 1, overflow: 'auto'}}>
         <MapContent pluginStatus={pluginStatus} />
       </div>
         <Setting />

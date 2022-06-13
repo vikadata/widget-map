@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord } from '@vikadata/widget-sdk';
+import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord } from '@vikadata/widget-sdk';
 import { getLocationArrayAsync } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput } from '@vikadata/components';
 import styles from './style.module.less';
-
+import { SearchOutlined } from '@vikadata/icons';
 
 interface mapContentProps {
   pluginStatus: boolean
@@ -14,11 +14,6 @@ interface markConfig {
   iconStyle: string,  //背景图标样式
   iconLabel: string,  //前景文字 
   iconTheme: string, //图标主题 
-}
-
-interface locationType{
-  lng: string,
-  lat: string,
 }
 
 const conterMarkerConfig = {
@@ -33,24 +28,16 @@ const homeMarkerConfig = {
   iconTheme: 'fresh'
 }
 
-interface InfolistType{
-  text: string,
-  value: string,
-}
-
-
 export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
   // 获取表格视图ID
   const [viewId] = useCloudStorage<string>('selectedViewId');
   // 获取所有行的信息
   const records = useRecords(viewId);
+
   // 处理完的表格信息
   const [recordsData, setRecordsdata] = useState<any>();
   const expandRecord = useExpandRecord();
 
-  const [mapSettingList] = useCloudStorage<Array<InfolistType>>('mapSettingList');
-  const [mapSettingListStatus] = useCloudStorage<boolean>('mapSettingListStatus');
-  
   // 中心标点
   const [markerCenterLayer, setMarkerCenterLayer] = useState<any>();
   // 地图标点集合
@@ -62,7 +49,29 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
 
   // 地址类型
   const [addressType] = useCloudStorage<string | number>('addressType', 'text');
-  
+  // 地址字段ID
+  const [addressFieldId] = useCloudStorage<string>('address');
+  // 名称字段ID
+  const [titleFieldID] = useCloudStorage<string>('title');
+
+  // 获取表格选中信息
+  const activeCell = useActiveCell();
+  const activeRecord = useRecord(activeCell?.recordId);
+
+  useEffect(() => {
+    console.log('选中信息', activeRecord?.getCellValueString(addressFieldId));
+    const selectAddress = activeRecord?.getCellValueString(addressFieldId);
+    const lnglat = selectAddress ? selectAddress.split(',') : '';
+    try {
+      console.log('lnglat', lnglat);
+      const position = lnglat !== '' ? new window.AMap.LngLat(lnglat[0], lnglat[1]) : null;
+      window.amap.setCenter(position);
+    } catch(e) {
+      console.log(e);
+    } 
+  }, [activeCell, window.amap]);
+
+  // 设置搜索定位功能
   useEffect(() => {
     if(!window.AutoComplete) {
       return;
@@ -91,33 +100,21 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
 
   // 地址处理
   useEffect(function getAddressList() {
-    if(!mapSettingListStatus) {
+    if(!addressType || !addressFieldId) {
       return;
-    }
-    const infoListObj = mapSettingList.reduce((pre, current, index) => {
-      if(index === 1) {
-        const obj = {
-          [pre.text] : pre.value
-        }
-        pre = obj;
-      }
-      pre[current.text] = current.value
-      return pre;
-    });
-    
+    }  
     // 获取表格所有地址
     const recordsData: any[] = records
       .map(record => {
-        let resObj = {}
-        for(let key in infoListObj) {
-          resObj[key] = record.getCellValueString(infoListObj[key]) || '';
-          resObj['id'] = record.id
+        return {
+          title: record.getCellValueString(titleFieldID) || '',
+          address: record.getCellValueString(addressFieldId) || '',
+          id: record.id,
         }
-        return resObj;
       });
-    
+    console.log('recordsData----->', recordsData);
     setRecordsdata(recordsData);
-  },[records, mapSettingListStatus, mapSettingList]);
+  },[records, addressFieldId, addressType, titleFieldID]);
 
   // 创建中心点坐标
   useEffect(function setCenter(){
@@ -131,11 +128,11 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
  
   // 根据表格设置所有地图点
   useEffect(function drawAddress() {
-    if (!pluginStatus || !recordsData  || !mapSettingListStatus) {
+    if (!pluginStatus || !recordsData) {
       return;
     }
     markAddress(recordsData, markersLayer, expandRecord);
-  }, [recordsData, pluginStatus, mapSettingListStatus]);
+  }, [recordsData, pluginStatus]);
 
   /* 创建标记点 
   record: 标点信息
@@ -152,7 +149,7 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
     }
     const marker =  new window.AMapUI.SimpleMarker({
       ...markerConfig,
-      title: record['名称'],
+      title: record.title,
       //...其他Marker选项...，不包括content
       map: window.amap,
       clickable: true,
@@ -186,8 +183,10 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
       
 
       if(addressType === 'text') {
-        const recordsAddress = recordsData.map(record => record['地址']).filter(Boolean);
+        const recordsAddress = recordsData.map(record => record.address).filter(Boolean);
+
         const locationList : any = await getLocationArrayAsync(recordsAddress);
+
         console.log('locationList', locationList);
         recordsRes = locationList.map((item, index) => {
             return {
@@ -199,7 +198,7 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
         // recordsRes = await Promise.all(asyncRecords);
       } else if(addressType === 'latlng') {
         recordsRes = recordsData.map( record => {
-          const lonlat = record['地址'] ? record['地址'].split(',') : '';
+          const lonlat = record.address ? record.address.split(',') : '';
           
           let location;
           try {
@@ -228,14 +227,20 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
     <div style={{ width: '100%', height: '100%' }}>
       <div id="container" style={{ width: '100%', height: '100%' }}>
           <div className={styles.searchContent}>
-              <TextInput
-                className={styles.searchInput}
-                placeholder="请输入内容"
-                size="small"
-                id="searchInput"
-                value={searchKey}
-                onChange={ e => setSearchKey(e.target.value)}
-              />
+              <div className={styles.searchBlock}>
+                <TextInput
+                  className={styles.searchInput}
+                  placeholder="请输入内容"
+                  size="small"
+                  id="searchInput"
+                  value={searchKey}
+                  onChange={ e => setSearchKey(e.target.value)}
+                  block
+                />
+              </div>
+              <div className={styles.searchIcon}>
+                  <SearchOutlined color="#FFFFFF" />
+              </div>
           </div>
       </div>
     </div>

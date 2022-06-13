@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord } from '@vikadata/widget-sdk';
-import { getLocationArrayAsync } from '../../utils/common';
+import { getLocationArrayAsync, getLocationAsync } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput } from '@vikadata/components';
 import styles from './style.module.less';
 import { SearchOutlined } from '@vikadata/icons';
-
+import { chunk } from 'lodash';
+import { useAsyncEffect } from '../../utils/hooks';
 interface mapContentProps {
   pluginStatus: boolean
 }
@@ -58,13 +59,27 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
   const activeCell = useActiveCell();
   const activeRecord = useRecord(activeCell?.recordId);
 
-  useEffect(() => {
+  
+
+
+  // 根据选中信息设置中心坐标
+  useAsyncEffect(async () => {
     console.log('选中信息', activeRecord?.getCellValueString(addressFieldId));
     const selectAddress = activeRecord?.getCellValueString(addressFieldId);
-    const lnglat = selectAddress ? selectAddress.split(',') : '';
+  
+    let lnglat;
+    let position;
     try {
-      console.log('lnglat', lnglat);
-      const position = lnglat !== '' ? new window.AMap.LngLat(lnglat[0], lnglat[1]) : null;
+      if(addressType === 'latlng'){
+        lnglat = selectAddress ? selectAddress.split(',') : '';
+        console.log('lnglat', lnglat);
+        position = lnglat !== '' ? new window.AMap.LngLat(lnglat[0], lnglat[1]) : null;
+      } else {
+         lnglat = await getLocationAsync(selectAddress);
+         position = lnglat ? [lnglat.lng, lnglat.lat] : null;
+        console.log('position---->', position);
+      }
+    
       window.amap.setCenter(position);
     } catch(e) {
       console.log(e);
@@ -83,7 +98,6 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
   function select(e) {
       setSearchKey(e.poi.name);
       //创建标点 并且设置为地图中心
-      
       if(markerCenterLayer) {
         window.amap.remove(markerCenterLayer);
       } 
@@ -112,19 +126,9 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
           id: record.id,
         }
       });
-    console.log('recordsData----->', recordsData);
     setRecordsdata(recordsData);
   },[records, addressFieldId, addressType, titleFieldID]);
 
-  // 创建中心点坐标
-  useEffect(function setCenter(){
-    if(!window.amap || !pluginStatus) {
-      return;
-    }
-    if(markerCenterLayer) {
-      window.amap.remove(markerCenterLayer);
-    } 
-  },[window.amap, pluginStatus]);
  
   // 根据表格设置所有地图点
   useEffect(function drawAddress() {
@@ -183,19 +187,24 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
       
 
       if(addressType === 'text') {
+        // 获取表格当中的地址
         const recordsAddress = recordsData.map(record => record.address).filter(Boolean);
+        // 将表格拆分成每份为20的二维数组方便批量查询
+        const recordsAddressChunk = chunk(recordsAddress, 20);
+       
+        const getlocationList : any = recordsAddressChunk.map(recordsAddressItem => {
+                return getLocationArrayAsync(recordsAddressItem);
+        });
 
-        const locationList : any = await getLocationArrayAsync(recordsAddress);
+        const locationList = (await Promise.all(getlocationList)).flat();
 
-        console.log('locationList', locationList);
+        // 将查询到的地址字段跟行信息结合
         recordsRes = locationList.map((item, index) => {
             return {
               location: item ? { lng: item.location.lng, lat: item.location.lat} : null,
               ...recordsData[index]
             }
         });
-        // const asyncRecords = recordsData.map(record => getLocationAsync(record));
-        // recordsRes = await Promise.all(asyncRecords);
       } else if(addressType === 'latlng') {
         recordsRes = recordsData.map( record => {
           const lonlat = record.address ? record.address.split(',') : '';
@@ -205,7 +214,7 @@ export const MapContent: React.FC<mapContentProps> = ({ pluginStatus  }) => {
             location = lonlat !== '' ? new window.AMap.LngLat(lonlat[0], lonlat[1]) : null;
           } catch(e) {
             location = null
-            console.log(e)
+            //console.log(e)
           }
           return {
             location,

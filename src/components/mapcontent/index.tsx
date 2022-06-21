@@ -10,7 +10,7 @@ import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
 import markerSelectedIcon from '../../static/img/markSelect.svg';
 import { IPlugins, ISimpleRecords } from '../../interface/map';
-import * as ReactDOM from 'react-dom';
+
 
 
 interface mapContentProps {
@@ -41,7 +41,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   const [searchKey, setSearchKey] = useState<string>();
   const debouncedSearchKey = useDebounce(searchKey, { wait: 500 });
   // 地址类型
-  const [addressType] = useCloudStorage<string | number>('addressType');
+  const [addressType] = useCloudStorage<string | number>('addressType', 'text');
   // 地址字段ID
   const [addressFieldId] = useCloudStorage<string>('address');
   // 名称字段ID
@@ -125,7 +125,6 @@ export const MapContent: React.FC<mapContentProps> = props => {
         const zoom =  map.getZoom();
         const label = document.getElementsByClassName('amap-marker-label');
         const labelArr = Object.keys(label);
-        console.log('label---->', typeof label);
         if(zoom < 12) {
           // console.log('zoom变化', map);
           
@@ -188,7 +187,6 @@ export const MapContent: React.FC<mapContentProps> = props => {
           
           if(record && record.className) {
             const recordData = record.getExtData();
-            // console.log('record.getExtData()', record.getExtData());
             if(recordData.isAddressUpdate) {
               
               map.remove(record);
@@ -207,8 +205,6 @@ export const MapContent: React.FC<mapContentProps> = props => {
           }
         }));
        
-        
-
       } else if(addressType === 'latlng') {
         locationRecoreds = simpleRecords.map( record => {
           if(record && record.className) {
@@ -261,6 +257,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   // 配置改动直接全部更新
   useAsyncEffect(async () => {
+    console.log('配置信息', addressType, addressFieldId, lodingStatus);
     if(!addressType || !addressFieldId || !records || !lodingStatus) {
       return;
     }
@@ -277,13 +274,14 @@ export const MapContent: React.FC<mapContentProps> = props => {
         isTitleUpdate: true,
       }
     });
+    console.log('simpleRecords------>', simpleRecords);
     const locationRecoreds = await dealAddress(simpleRecords);
+    console.log('locationRecoreds------>', locationRecoreds);
     setMakerslayer(locationRecoreds);
-
   }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
 
-  // records 改动地址字段处理存入cloudStorage 增删减更新
+  // records改动地址名称字段处理存入markersLayer 增删减更新
   useAsyncEffect(async function getAddressList() {
     if(!addressType || !addressFieldId || !records || !lodingStatus) {
       return;
@@ -388,20 +386,9 @@ export const MapContent: React.FC<mapContentProps> = props => {
       console.log('dealAddressRecordsCopy---->', dealAddressRecordsCopy);
       setMakerslayer(dealAddressRecordsCopy);
     }
-     
-    
-
   },[records]);
 
  
-  // // 根据表格设置所有地图点
-  // useEffect(function drawAddress() {
-  //   if (!lodingStatus || !markAddressRecords) {
-  //     return;
-  //   }
-  //   markAddress(markAddressRecords, markersLayer, expandRecord);
-  // }, [markAddressRecords, lodingStatus]);
-
   /* 创建标记点 
   record: 标点信息
   markerConfig: 标点参数配置
@@ -417,7 +404,6 @@ export const MapContent: React.FC<mapContentProps> = props => {
     }
     const marker =  new AMap.Marker({
       icon,
-      title: record.title,
       //...其他Marker选项...，不包括content
       map: map,
       label: { 
@@ -449,34 +435,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   // function creatLabelMarker
 
-  /* 根据地址搜索增加marker点 
-  markAddressData: 创建标点数据
-  markersLayer: 之前已经创建的marker图层
-  expandRecord: 展开卡片函数
-  */
-  async function markAddress( 
-    markAddressData: Array<any>, 
-    markersLayer: Array<any>,
-    expandRecord: (expandRecordParams: IExpandRecord) => void
-  ) {
-      
-    
-    if(markersLayer) {
-      map.remove(markersLayer);
-    }
-      
-
-    const defaultIcon = new AMap.Icon({
-      ...iconDefaultConfig,
-      image: markerIcon,  // Icon的图像
-    });
-
-    const markers = markAddressData && markAddressData.map((record: any) => { 
-      return creatMarker(expandRecord, record, defaultIcon);
-    }).filter(x => x);
   
-    setMakerslayer(markers);
-  }
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
@@ -491,11 +450,12 @@ export const MapContent: React.FC<mapContentProps> = props => {
                   value={searchKey}
                   onChange={ e => setSearchKey(e.target.value)}
                   block
+                  suffix={<SearchOutlined color="#7B67EE" />}
                 />
               </div>
-              <div className={styles.searchIcon}>
+              {/* <div className={styles.searchIcon}>
                   <SearchOutlined  />
-              </div>
+              </div> */}
           </div>
           {/* <div className={styles.toolBar}>
               <div className={styles.enlarge}>

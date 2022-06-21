@@ -2,7 +2,7 @@
 // -------- 搜索相关 start--------- //
 :global {
   .amap-sug-result {
-    width: 196px;
+    // width: 196px;
     background: #FFFFFF;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.12);
     border-radius: 4px;
@@ -60,6 +60,26 @@
 :global {
   .amap-marker-label {
     // width: 86px;
+    display: block;
+    max-width: 164px;
+    height: 32px;
+    background: #333333;
+    border: 1px solid #474747;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-family: 'PingFang SC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .amap-marker[title]:hover:after {
     display: block;
     max-width: 164px;
     height: 32px;

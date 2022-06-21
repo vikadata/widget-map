@@ -38,7 +38,7 @@ export const Setting: React.FC = () => {
                 onChange={option => setAddressFieldId(option.value)} 
               />
             </FormItem>
-            <FormItem label="切换地址的数据类型" >
+            <FormItem label="切换地址的数据类型" help="数据类型说明">
                 <RadioGroup name="btn-group-with-default" isBtn value={addressType} block onChange={(e, value) => {
                   setAddressType(value);
                 }}>
@@ -66,10 +66,18 @@ export const Setting: React.FC = () => {
   ) : null;
 };
 
-const FormItem = ({label, children}) => {
+interface IFormItemProps {
+  label: string;
+  children: any;
+  help?: string;
+  link?: string;
+}
+
+const FormItem = (props : IFormItemProps) => {
+  const {label, children, help, link } = props;
   return (
     <div style={{display: 'flex', flexDirection: 'column', marginBottom: 16}}>
-      <label className={styles.settingLabel} >{label}</label>
+      <label className={styles.settingLabel} >{label} { help && <a href={link}>{help}</a> }</label>
       {children}
     </div>
   )

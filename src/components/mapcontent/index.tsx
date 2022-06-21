@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord, useMeta, useField } from '@vikadata/widget-sdk';
-import { getLocationAsync, getRcoresLocationAsync } from '../../utils/common';
+import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput } from '@vikadata/components';
 import styles from './style.module.less';
@@ -10,8 +10,8 @@ import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
 import markerSelectedIcon from '../../static/img/markSelect.svg';
 import { IPlugins, ISimpleRecords } from '../../interface/map';
-
-
+import { slice } from 'lodash';
+import "@amap/amap-jsapi-types";
 
 interface mapContentProps {
   lodingStatus: boolean,
@@ -20,8 +20,8 @@ interface mapContentProps {
   plugins: IPlugins | undefined
 }
 
-
-
+// 最大限制列
+const limitRcord = 500;
 
 
 export const MapContent: React.FC<mapContentProps> = props => {
@@ -47,21 +47,18 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 名称字段ID
   const [titleFieldID] = useCloudStorage<string>('title');
   // 地址字段
-  const addressField = useField(addressFieldId);
+  // const addressField = useField(addressFieldId);
   // 获取表格选中信息
   const activeCell = useActiveCell();
   const activeRecord = useRecord(activeCell?.recordId);
   const [updateMap] = useCloudStorage<boolean>('updateMap');
 
   // 地图标点集合
-  const [markersLayer, setMakerslayer] = useState<any>();
+  const [markersLayer, setMakerslayer] = useState<AMap.Marker[]>();
   // 地理编码或者坐标转换之后的Records
   // const [markAddressRecords, setMarkAddressRecords] = useCloudStorage<any>('markAddressData');
   
-  // 监听测试
-  useEffect(() => {
-    console.log('addressField改变', addressField);
-  }, [addressField]);
+
   
   
 
@@ -125,7 +122,6 @@ export const MapContent: React.FC<mapContentProps> = props => {
         const zoom =  map.getZoom();
         const label = document.getElementsByClassName('amap-marker-label');
         const labelArr = Object.keys(label);
-        console.log('zoom变化', zoom);
         if(zoom < 12) {
           labelArr.forEach(item=> {
             label[item].style.visibility = 'hidden';
@@ -263,7 +259,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
     if(markersLayer) {
       map.remove(markersLayer);
     }
-    const simpleRecords: ISimpleRecords[] = records
+
+    const simpleRecords: ISimpleRecords[] = slice(records, 0, limitRcord)
     .map(record => {
       return {
         title: record.getCellValueString(titleFieldID) || '',
@@ -273,9 +270,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
         isTitleUpdate: true,
       }
     });
-    console.log('simpleRecords------>', simpleRecords);
     const locationRecoreds = await dealAddress(simpleRecords);
-    console.log('locationRecoreds------>', locationRecoreds);
     setMakerslayer(locationRecoreds);
   }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
@@ -287,7 +282,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
     }
     // 点击更新地图之后根据如果是地址字段去对比cloudStorage储存的信息
     // 获取表格所有地址以及用户选择的名称
-    const simpleRecords: ISimpleRecords[] = records
+   
+    const simpleRecords: ISimpleRecords[] = slice(records, 0, limitRcord)
     .map(record => {
       return {
         title: record.getCellValueString(titleFieldID) || '',
@@ -304,85 +300,9 @@ export const MapContent: React.FC<mapContentProps> = props => {
       setMakerslayer(locationRecoreds);
     } else {
       
-      const markAddressRecordsCopy = [...markersLayer];
-      // console.log('simpleRecords----->', simpleRecords);
-      let newRecordIndex : number[] = [];
-      let newRecordIsAdd : boolean[] = [];
-     
-      markAddressRecordsCopy.forEach((mark, index, arr ) => {
-        const markInfo =  mark.getExtData();
-        let isExist = false;
-        simpleRecords.forEach((record, recordIndex)=> {
-            if(markInfo.id === record.id ) {
-              // 已经出现了不用删除不用新增
-              isExist = true;
-              const newIndex = newRecordIndex.indexOf(recordIndex);
-              if(newIndex > - 1) {
-                newRecordIsAdd[newIndex] = false;
-              } else {
-                newRecordIndex.push(recordIndex);
-                newRecordIsAdd.push(false);
-              }
-
-              // 如果ID相等 检查地址是否变更
-              if(markInfo.address === record.address) {
-                // 如果没有变更
-                arr[index].setExtData({
-                  ...markInfo,
-                  isAddressUpdate: false,
-                });
-              } else {
-                console.log('地址发生了变更');
-                // 如果变更了
-                arr[index].setExtData({
-                  ...markInfo,
-                  address: record.address,
-                  isAddressUpdate: true,
-                });
-              }
-
-              if(markInfo.title === record.title) {
-                // 如果没有变更
-                arr[index].setExtData({
-                  ...arr[index].getExtData(),
-                  isTitleUpdate: false,
-                });
-              } else {
-                // 如果变更了
-                arr[index].setExtData({
-                  ...arr[index].getExtData(),
-                  title: record.title,
-                  isTitleUpdate: true,
-                });
-              }
-
-            } else {
-                if(!newRecordIndex.includes(recordIndex)) {
-                  newRecordIndex.push(recordIndex);
-                  newRecordIsAdd.push(true);
-                }
-            }
-        });
-        // 如果找不到了删除这个
-        if(!isExist) {
-          arr.splice(index,1);
-        }
-
-      }, markAddressRecordsCopy);
-
-      // 获取需要新增的信息
-      const addreRcored = newRecordIndex.map((item,index) => {
-          if(newRecordIsAdd[index]) {
-            return simpleRecords[item];
-          } else {
-            return null;
-          }
-      }).filter(Boolean);
-
-      // console.log('addreRcored', addreRcored);
-    
-      const dealAddressRecordsCopy = await dealAddress(markAddressRecordsCopy.concat(addreRcored));
-      console.log('dealAddressRecordsCopy---->', dealAddressRecordsCopy);
+      const newAddressRecord = updateMardkAddressRecord(simpleRecords, markersLayer);
+      
+      const dealAddressRecordsCopy = await dealAddress(newAddressRecord);
       setMakerslayer(dealAddressRecordsCopy);
     }
   },[records]);
@@ -404,6 +324,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
     const marker =  new AMap.Marker({
       icon,
       //...其他Marker选项...，不包括content
+      title: record.title,
       map: map,
       label: { 
         content: record.title,
@@ -421,20 +342,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
     marker.on('click', () => {
       expandRecord({recordIds: [record.id]});
     });
-    
+ 
     return marker;
   }
 
-  /**创建labelmarker
-   * 
-   * @param record 
-   * @param markersLayer 
-   * @param expandRecord 
-   */
-
-  // function creatLabelMarker
-
-  
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
@@ -452,18 +363,15 @@ export const MapContent: React.FC<mapContentProps> = props => {
                   suffix={<SearchOutlined color="#7B67EE" />}
                 />
               </div>
-              {/* <div className={styles.searchIcon}>
-                  <SearchOutlined  />
-              </div> */}
           </div>
-          {/* <div className={styles.toolBar}>
-              <div className={styles.enlarge}>
-                  <img src={marker} alt="" />
+          <div className={styles.toolBar}>
+              <div className={styles.enlarge} onClick={() => { map.zoomIn() }}>
+                  <span>+</span>
               </div>
-              <div className={styles.narrow}>
+              <div className={styles.narrow} onClick={() => { map.zoomOut() }}>
                   <span>-</span>
               </div>
-          </div> */}
+          </div>
       </div>
     </div>
   );

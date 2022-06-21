@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
+    "@amap/amap-jsapi-types": "^0.0.8",
     "@types/react": "^16.9.43",
     "@types/react-dom": "^16.9.8",
     "@vikadata/components": "^0.0.4",

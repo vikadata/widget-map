@@ -55,6 +55,8 @@ export const MapComponent: React.FC = () => {
       },
     }).then((AMap) => {
       setAMap(AMap);
+    }).catch(e=>{
+        console.log('地图加载失败原因---->', e);
     });
    
   });
@@ -78,7 +80,7 @@ export const MapComponent: React.FC = () => {
     setMap(amap);
 
     // 添加工具条
-    amap.addControl(new AMap.ToolBar());
+    // amap.addControl(new AMap.ToolBar());
     window.amap = amap;
 
 

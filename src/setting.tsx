@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker } from '@vikadata/widget-sdk';
-import { RadioGroup, Radio } from '@vikadata/components';
+import { RadioGroup, Radio, Button } from '@vikadata/components';
 import styles from './setting.module.less';
 
 
@@ -15,6 +15,16 @@ export const Setting: React.FC = () => {
 
   // 名称字段ID
   const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title');
+
+  // 生成地图
+  const [showCreatMap, setShowCreatMap] = useCloudStorage<boolean>('creatMap', () => !!viewId !!&& !!addressType && !!addressFieldId && !!titleFieldID);
+  // 是否显示生成地图按钮
+  // const [canCreatMap,  setCanCreatMap] = useState<Boolean>(false);
+
+  // 更新地图
+  const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
+
+
 
   return isSettingOpened ? (
     <div className={styles.settingContent}>
@@ -47,8 +57,13 @@ export const Setting: React.FC = () => {
                 onChange={option => setTitleFieldId(option.value)} 
               />
             </FormItem>
+            {/* <FormItem label="" >
+              { showCreatMap && <Button block onClick={() => setUpdateMap(!updateMap)}>生成地图</Button> }
+            </FormItem> */}
+            <FormItem label="" >
+              <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
+            </FormItem>
           </div>
-      
         </div>
       </div>
     </div>

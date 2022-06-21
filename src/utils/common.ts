@@ -1,11 +1,18 @@
+import { IPlugins, ISimpleRecords } from '../interface/map';
 
 // 根据地址获取去高德地图定位点
-function getLocationAsync(address: any) {
+export const getLocationAsync = (plugins: IPlugins | undefined, address: any) => {
+
+  if(!plugins) {
+    return;
+  }
+
   return new Promise((resolve, reject) => {
    
     if(address) {
-      window.Geocoder.getLocation(address, function(status, result) {
+      plugins.geocoder.getLocation(address, function(status, result) {
         if (status === 'complete' && result.info === 'OK') {
+          
           const { lng, lat} = result.geocodes[0].location;
           resolve({ lng, lat});
         } else {
@@ -18,12 +25,53 @@ function getLocationAsync(address: any) {
   });
 }
 
-// 根据地址数组获取去高德地图定位点
-function getLocationArrayAsync(records: any) {
+// 根据地址获取去高德地图定位点
+export const getRcoresLocationAsync = (plugins: IPlugins | undefined, records: ISimpleRecords) => {
+  const { address } = records
+
+  if(!plugins) {
+    return;
+  }
+
   return new Promise((resolve, reject) => {
-    window.Geocoder.getLocation(records, function(status, result) {
+   
+    if(address &&  address !== '') {
+      plugins.geocoder.getLocation(address, function(status, result) {
+        if (status === 'complete' && result.info === 'OK') {
+          
+          const { lng, lat} = result.geocodes[0].location;
+          resolve({
+            ...records,
+            location: [lng, lat]
+          });
+        } else {
+          resolve({
+            ...records,
+            location: null
+          });
+        }
+      });
+    } else {
+        resolve({
+          ...records,
+          location: null
+        });
+    }
+  });
+}
+
+// 根据地址数组获取去高德地图定位点
+export const getLocationArrayAsync = (plugins: IPlugins | undefined, records: any) => {
+  if(!plugins) {
+    return;
+  }
+ 
+  return new Promise((resolve, reject) => {
+    plugins.geocoder.getLocation(records, function(status, result) {
+      console.log('records--->', records);
       if (status === 'complete' && result.info === 'OK') {
         // const { lng, lat} = result.geocodes[0].location;
+        console.log('result--->', result);
         resolve(result.geocodes);
       } else {
         resolve([]);
@@ -34,10 +82,12 @@ function getLocationArrayAsync(records: any) {
 }
 
 // 创建路劲规划
-async function creatTransfer(pointA, pointB) {
- 
+export const creatTransfer = (plugins: IPlugins | undefined,pointA, pointB) => {
+  if(!plugins) {
+    return
+  }
   return new Promise<void>(resolve => {
-    window.Transfer.search(pointA, pointB, function(status, result) {
+    plugins.transfer.search(pointA, pointB, function(status, result) {
         if (status === 'complete') {
             console.log(result);
             resolve()
@@ -48,4 +98,3 @@ async function creatTransfer(pointA, pointB) {
   });
 }
 
-export { getLocationAsync, creatTransfer, getLocationArrayAsync }

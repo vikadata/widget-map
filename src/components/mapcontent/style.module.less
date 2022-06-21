@@ -1,4 +1,5 @@
 
+// -------- 搜索相关 start--------- //
 :global {
   .amap-sug-result {
     width: 196px;
@@ -19,7 +20,6 @@
   }
 }
 
-
 .searchContent {
   position: absolute;
   left: 24px;
@@ -35,8 +35,8 @@
 }
 
 .searchInput {
-  background-color: #fff;
-  border: 1px solid #C9C9C9;
+  // background-color: #fff;
+  // border: 1px solid #C9C9C9;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
@@ -52,3 +52,72 @@
   border-bottom-right-radius: 4px;
   cursor: pointer;
 }
+
+// -------- 搜索相关 end--------- //
+
+
+// -------- 图标label start --------- //
+:global {
+  .amap-marker-label {
+    // width: 86px;
+    display: block;
+    max-width: 164px;
+    height: 32px;
+    background: #333333;
+    border: 1px solid #474747;
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-family: 'PingFang SC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.85);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+
+// -------- zoom相关 start--------- //
+
+.toolBar {
+  position: absolute;
+  width: 32px;
+  height: 64px;
+  right: 24px;
+  bottom: 24px;
+  background: #FFFFFF;
+  box-shadow: 0px 2px 12px rgba(38, 38, 38, 0.1);
+  border-radius: 4px;
+  z-index: 99;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  div {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #8C8C8C;
+    border-radius: 50%;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    // align-items: center;
+    cursor: pointer;
+    span {
+      color: #8C8C8C;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 12px;
+    }
+  }
+
+  
+
+}
+
+// -------- zoom相关 end--------- //

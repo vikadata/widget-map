@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, FieldType } from '@vikadata/widget-sdk';
+import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker } from '@vikadata/widget-sdk';
 import { RadioGroup, Radio, Button } from '@vikadata/components';
 import styles from './setting.module.less';
 import { InformationLargeOutlined } from '@vikadata/icons';
@@ -35,7 +35,6 @@ export const Setting: React.FC = () => {
               <FieldPicker  
                 viewId={viewId} 
                 fieldId={addressFieldId}
-                allowedTypes={[FieldType.Text, FieldType.SingleText]}
                 onChange={option => setAddressFieldId(option.value)} 
               />
             </FormItem>

@@ -125,9 +125,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
         const zoom =  map.getZoom();
         const label = document.getElementsByClassName('amap-marker-label');
         const labelArr = Object.keys(label);
+        console.log('zoom变化', zoom);
         if(zoom < 12) {
-          // console.log('zoom变化', map);
-          
           labelArr.forEach(item=> {
             label[item].style.visibility = 'hidden';
           });

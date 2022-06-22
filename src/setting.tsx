@@ -73,9 +73,6 @@ export const Setting: React.FC = () => {
               />
             </FormItem>
             {/* <FormItem label="" >
-              { showCreatMap && <Button block onClick={() => setUpdateMap(!updateMap)}>生成地图</Button> }
-            </FormItem> */}
-            {/* <FormItem label="" >
               <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
             </FormItem> */}
           </div>

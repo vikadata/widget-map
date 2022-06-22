@@ -5,15 +5,18 @@ import AMapLoader from '@amap/amap-jsapi-loader';
 // import { useMount } from 'ahooks';
 import { IPlugins } from './interface/map';
 import { useCloudStorage, useMeta } from '@vikadata/widget-sdk';
+import "@amap/amap-jsapi-types";
 declare global {
   interface Window { 
     AMap: any, // 地图API
-    amap: any, // 地图实例
-    infoWindow: any, // 信息弹窗实例
-    _AMapSecurityConfig: any
+    infoWindow: AMap.InfoWindow, // 信息弹窗实例
+    _AMapSecurityConfig: IAMapSecurityConfig
   }
 }
 
+interface IAMapSecurityConfig {
+  securityJsCode: string;
+}
 
 
 export const MapComponent: React.FC = () => {

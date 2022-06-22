@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord } from '@vikadata/widget-sdk';
 import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce } from 'ahooks';
-import { TextInput } from '@vikadata/components';
+import { TextInput, Message } from '@vikadata/components';
 import styles from './style.module.less';
 import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined} from '@vikadata/icons';
 
@@ -35,7 +35,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 展开卡片
   const expandRecord = useExpandRecord();
   // 中心标点
-  const [markerCenterLayer, setMarkerCenterLayer] = useState<any>();
+  const [markerCenterLayer, setMarkerCenterLayer] = useState<AMap.Marker>();
   
   // 搜索输入
   const [searchKey, setSearchKey] = useState<string>();
@@ -249,7 +249,6 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   // 配置改动直接全部更新
   useAsyncEffect(async () => {
-    console.log('配置信息', addressType, addressFieldId, lodingStatus);
     if(!addressType || !addressFieldId || !records || !lodingStatus) {
       return;
     }
@@ -267,8 +266,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
         isTitleUpdate: true,
       }
     });
+    map.setZoom(4);
     const locationRecoreds = await dealAddress(simpleRecords);
-    map.setFitView(locationRecoreds, true);
+    Message.success({ content: `图标渲染完成 渲染数目${locationRecoreds.length}` });
+    
     setMakerslayer(locationRecoreds);
   }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
@@ -292,9 +293,9 @@ export const MapContent: React.FC<mapContentProps> = props => {
       }
     });
     if(!markersLayer || markersLayer.length === 0) { // 如果是第一次设置地图
-      
+      map.setZoom(4);
       const locationRecoreds = await dealAddress(simpleRecords);
-      map.setFitView(locationRecoreds, true);
+      Message.success({ content: `图标渲染完成 渲染数目${locationRecoreds.length}` });
       setMakerslayer(locationRecoreds);
     } else {
       
@@ -314,7 +315,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   function creatMarker(
     expandRecord: (expandRecordParams: IExpandRecord) => void,
     record: any, 
-    icon: any,
+    icon: AMap.Icon,
   ) {
     if(!record.location) {
       return;

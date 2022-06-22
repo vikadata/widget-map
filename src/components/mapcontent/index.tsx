@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord, useMeta, useField } from '@vikadata/widget-sdk';
+import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord } from '@vikadata/widget-sdk';
 import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput } from '@vikadata/components';
@@ -58,10 +58,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 地理编码或者坐标转换之后的Records
   // const [markAddressRecords, setMarkAddressRecords] = useCloudStorage<any>('markAddressData');
   
-
   
   
-
+  
+  // 默认Icon 配置
   const iconDefaultConfig = useMemo(() => {
       return lodingStatus ? {
         image: markerIcon,
@@ -70,6 +70,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
       } : null;
   }, [AMap, lodingStatus]);
   
+  // 默认信息弹窗配置
   const infoWindow =  useMemo(() => { 
     return lodingStatus ? new AMap.InfoWindow({
       content: '<div class="infowindowContent" >11111</div>',  //传入 dom 对象，或者 html 字符串
@@ -79,22 +80,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
     }) : null;
   }, [AMap, lodingStatus]);
 
-  // 地图样式切换
-  const { theme } = useMeta();
-
-  useEffect(() => {
-    if(!map)
-    {
-      return;
-    }
-
-    if(theme === "light") {
-      map.setMapStyle('amap://styles/b379277160c9c3ce520627ad2e4bd22c');
-    } else {
-      map.setMapStyle('amap://styles/2631e0b37c5791cd1a54ce45f94c16a7');
-    }
-
-  }, [theme, map]);
+  
+  
   
 
   // 根据选中信息设置中心坐标
@@ -117,7 +104,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
          position = lnglat ? [lnglat.lng, lnglat.lat] : null;
       }
     
-      map.setCenter(position);
+      map.setCenter(position, true);
     } catch(e) {
     } 
   }, [activeCell, map]);
@@ -126,9 +113,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // useEffect(() => {
   //   if(!map) {
   //     return;
-  //   }
+  //   }    
   //   map.on('zoomchange', e =>{
   //       const zoom =  map.getZoom();
+  //       console.log('zoom', zoom);
   //       const label = document.getElementsByClassName('amap-marker-label');
   //       const labelArr = Object.keys(label);
   //       if(zoom < 12) {
@@ -280,6 +268,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
       }
     });
     const locationRecoreds = await dealAddress(simpleRecords);
+    map.setFitView(locationRecoreds, true);
     setMakerslayer(locationRecoreds);
   }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
@@ -305,7 +294,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
     if(!markersLayer || markersLayer.length === 0) { // 如果是第一次设置地图
       
       const locationRecoreds = await dealAddress(simpleRecords);
-      
+      map.setFitView(locationRecoreds, true);
       setMakerslayer(locationRecoreds);
     } else {
       

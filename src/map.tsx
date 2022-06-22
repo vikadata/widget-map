@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Setting } from './setting';
 import { MapContent } from './components/mapcontent';
 import AMapLoader from '@amap/amap-jsapi-loader';
-import { useMount } from 'ahooks';
+// import { useMount } from 'ahooks';
 import { IPlugins } from './interface/map';
-import { useCloudStorage } from '@vikadata/widget-sdk';
+import { useCloudStorage, useMeta } from '@vikadata/widget-sdk';
 declare global {
   interface Window { 
     AMap: any, // 地图API
@@ -78,7 +78,7 @@ export const MapComponent: React.FC = () => {
   function initMap(AMap) {
   
     const amap = new AMap.Map('mapContainer', {
-      zoom: 12,//级别
+      zoom: 4,//级别
       viewMode: '2D',//使用3D视图
       mapStyle: 'amap://styles/b379277160c9c3ce520627ad2e4bd22c'
     });
@@ -122,6 +122,23 @@ export const MapComponent: React.FC = () => {
     });
 
   }
+
+  // 地图样式切换
+  const { theme } = useMeta();
+
+  useEffect(() => {
+    if(!map)
+    {
+      return;
+    }
+
+    if(theme === "light") {
+      map.setMapStyle('amap://styles/b379277160c9c3ce520627ad2e4bd22c');
+    } else {
+      map.setMapStyle('amap://styles/2631e0b37c5791cd1a54ce45f94c16a7');
+    }
+
+  }, [theme, map]);
 
   return (
     <div style={{ display: 'flex', height: '100%' }}>

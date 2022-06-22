@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker } from '@vikadata/widget-sdk';
-import { RadioGroup, Radio, Button, TextInput } from '@vikadata/components';
+import { RadioGroup, Radio } from '@vikadata/components';
 import styles from './setting.module.less';
 import { InformationLargeOutlined } from '@vikadata/icons';
 

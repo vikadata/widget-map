@@ -13,5 +13,7 @@
     "zh-CN": "根据定位在地图上显示标点，以及标点详细信息",
     "en-US": "map"
   },
-  "globalPackageId": "wpk2jJ7qZS0VG"
+  "globalPackageId": "wpk2jJ7qZS0VG",
+  "authorName": "Vika",
+  "sandbox": true
 }

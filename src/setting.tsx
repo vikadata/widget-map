@@ -17,7 +17,7 @@ export const Setting: React.FC = () => {
   const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title');
 
   // 更新地图
-  const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
+  // const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
 
   // 高德apiToken
   // const [apiToken, setApiToken] = useCloudStorage<string>('apiToken', '5b625cd96fdd79c2918cf5ec2cd7720c');
@@ -75,9 +75,9 @@ export const Setting: React.FC = () => {
             {/* <FormItem label="" >
               { showCreatMap && <Button block onClick={() => setUpdateMap(!updateMap)}>生成地图</Button> }
             </FormItem> */}
-            <FormItem label="" >
+            {/* <FormItem label="" >
               <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
-            </FormItem>
+            </FormItem> */}
           </div>
         </div>
       </div>

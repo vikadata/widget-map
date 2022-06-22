@@ -70,6 +70,15 @@ export const MapContent: React.FC<mapContentProps> = props => {
       } : null;
   }, [AMap, lodingStatus]);
   
+  const infoWindow =  useMemo(() => { 
+    return lodingStatus ? new AMap.InfoWindow({
+      content: '<div class="infowindowContent" >11111</div>',  //传入 dom 对象，或者 html 字符串
+      offset: [22, -12],
+      isCustom: true,
+      anchor: 'middle-left'
+    }) : null;
+  }, [AMap, lodingStatus]);
+
   // 地图样式切换
   const { theme } = useMeta();
 
@@ -114,25 +123,25 @@ export const MapContent: React.FC<mapContentProps> = props => {
   }, [activeCell, map]);
 
   // 监听地图的zooms改变
-  useEffect(() => {
-    if(!map) {
-      return;
-    }
-    map.on('zoomchange', e =>{
-        const zoom =  map.getZoom();
-        const label = document.getElementsByClassName('amap-marker-label');
-        const labelArr = Object.keys(label);
-        if(zoom < 12) {
-          labelArr.forEach(item=> {
-            label[item].style.visibility = 'hidden';
-          });
-        } else {
-          labelArr.forEach(item=> {
-            label[item].style.visibility = 'visible';
-          });
-        }
-    });
-  },[map]);
+  // useEffect(() => {
+  //   if(!map) {
+  //     return;
+  //   }
+  //   map.on('zoomchange', e =>{
+  //       const zoom =  map.getZoom();
+  //       const label = document.getElementsByClassName('amap-marker-label');
+  //       const labelArr = Object.keys(label);
+  //       if(zoom < 12) {
+  //         labelArr.forEach(item=> {
+  //           label[item].style.visibility = 'hidden';
+  //         });
+  //       } else {
+  //         labelArr.forEach(item=> {
+  //           label[item].style.visibility = 'visible';
+  //         });
+  //       }
+  //   });
+  // },[map]);
 
   // 设置搜索定位功能
   useEffect(() => {
@@ -324,12 +333,12 @@ export const MapContent: React.FC<mapContentProps> = props => {
     const marker =  new AMap.Marker({
       icon,
       //...其他Marker选项...，不包括content
-      title: record.title,
+      // title: record.title,
       map: map,
-      label: { 
-        content: record.title,
-        direction: 'right'
-      },
+      // label: { 
+      //   content: record.title,
+      //   direction: 'right'
+      // },
       anchor: 'bottom-center',
       clickable: true,
       position: record.location,
@@ -342,7 +351,16 @@ export const MapContent: React.FC<mapContentProps> = props => {
     marker.on('click', () => {
       expandRecord({recordIds: [record.id]});
     });
- 
+
+    marker.on('mouseover', () => {
+      infoWindow.setContent(`<div class="infowindowContent" >${record.title}</div>`)
+      infoWindow.open(map, record.location);
+    });
+    
+    marker.on('mouseout', () => {
+      infoWindow.close(map);
+    });
+
     return marker;
   }
 

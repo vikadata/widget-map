@@ -47,11 +47,10 @@ export const MapComponent: React.FC = () => {
       "version": "2.0",
       "plugins":[
         'AMap.Geocoder', 
-        "AMap.Transfer", 
+        // "AMap.Transfer", 
         "AMap.ToolBar", 
         "AMap.AutoComplete",
         "AMap.PlaceSearch",
-        "AMap.MarkerClusterer"
       ],
       "AMapUI": {             // 是否加载 AMapUI，缺省不加载
           "version": '1.1',   // AMapUI 版本
@@ -80,7 +79,9 @@ export const MapComponent: React.FC = () => {
     const amap = new AMap.Map('mapContainer', {
       zoom: 4,//级别
       viewMode: '2D',//使用3D视图
-      mapStyle: 'amap://styles/b379277160c9c3ce520627ad2e4bd22c'
+      mapStyle: 'amap://styles/b379277160c9c3ce520627ad2e4bd22c',
+      jogEnable: false,
+      animateEnable: false
     });
     setMap(amap);
 

@@ -17,11 +17,19 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  color: var(--textCommonPrimary);
   a {
     margin-left: 5.57px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
+  }
+  .questionIcon {
+    cursor: pointer;
+    fill: var(--textCommonTertiary);
+    &:hover {
+      fill: var(--textBrandDefault);
+    }
   }
 }
 
@@ -61,5 +69,8 @@ h3 {
   a {
     color: var(--textCommonTertiary);
     text-decoration: underline;
+    &:hover {
+      color: var(--textBrandDefault);
+    }
   }
 }

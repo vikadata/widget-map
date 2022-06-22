@@ -25,7 +25,7 @@ export const Setting: React.FC = () => {
 
   return isSettingOpened ? (
     <div className={styles.settingContent}>
-      <h1><span>地图配置</span> <a href="" target="_blank"><InformationLargeOutlined  size={17}/></a></h1>
+      <h1>地图配置 <a href="" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
       <div style={{ display: 'flex', height: '100%' }}>
         <div style={{ flexGrow: 1, overflow: 'auto'}}>
           <div className={styles.formItem}>

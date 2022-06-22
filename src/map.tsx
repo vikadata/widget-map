@@ -4,6 +4,7 @@ import { MapContent } from './components/mapcontent';
 import AMapLoader from '@amap/amap-jsapi-loader';
 import { useMount } from 'ahooks';
 import { IPlugins } from './interface/map';
+import { useCloudStorage } from '@vikadata/widget-sdk';
 declare global {
   interface Window { 
     AMap: any, // 地图API
@@ -13,9 +14,6 @@ declare global {
   }
 }
 
-window._AMapSecurityConfig = {
-  securityJsCode: '41d2e666297c21beda8897b2dfecc92f',
-}
 
 
 export const MapComponent: React.FC = () => {
@@ -31,15 +29,21 @@ export const MapComponent: React.FC = () => {
 
   // 配置好的插件对象集合
   const [plugins, setPlugins] = useState<IPlugins>();
-
+  // 高德apiToken
+  const [apiToken] = useCloudStorage<string>('apiToken', '5b625cd96fdd79c2918cf5ec2cd7720c');
+  const [securityJsCode] = useCloudStorage<string>('securityJsCode', '41d2e666297c21beda8897b2dfecc92f');
+  window._AMapSecurityConfig = {
+    securityJsCode: securityJsCode || '41d2e666297c21beda8897b2dfecc92f',
+  }
   // 组件初始化时，加载 sdk 地图实例
-  useMount(() => {
+  useEffect(() => {
     if(window.AMap) {
       setAMap(window.AMap);
       return;
     }
+    console.log('apiToken', apiToken);
     AMapLoader.load({
-      "key": '5b625cd96fdd79c2918cf5ec2cd7720c',
+      "key": apiToken || '5b625cd96fdd79c2918cf5ec2cd7720c',
       "version": "2.0",
       "plugins":[
         'AMap.Geocoder', 
@@ -56,10 +60,11 @@ export const MapComponent: React.FC = () => {
     }).then((AMap) => {
       setAMap(AMap);
     }).catch(e=>{
+        setLodingtatus(false);
         console.log('地图加载失败原因---->', e);
     });
    
-  });
+  }, [apiToken, securityJsCode]);
 
   // 初始化地图
   useEffect(() => {

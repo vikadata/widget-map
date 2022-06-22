@@ -4,7 +4,7 @@ import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } fr
 import { useDebounce } from 'ahooks';
 import { TextInput } from '@vikadata/components';
 import styles from './style.module.less';
-import { SearchOutlined, AddFilled, RelationReduceFilled } from '@vikadata/icons';
+import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined} from '@vikadata/icons';
 
 import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
@@ -383,8 +383,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
               </div>
           </div>
           <div className={styles.toolBar}>
-            <AddFilled size={16}  onClick={() => { map.zoomIn() }} />
-            <RelationReduceFilled size={16} onClick={() => { map.zoomOut() }} />
+            <ZoomInOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />
+            <ZoomOutOutlined size={16} className={styles.tooBarIcon} onClick={() => { map.zoomOut() }} />
           </div>
       </div>
     </div>

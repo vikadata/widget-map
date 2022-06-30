@@ -45,6 +45,7 @@
   color: var(--colorFontColorFC1);
 }
 
+
 // -------- 搜索相关 end--------- //
 
 
@@ -69,6 +70,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    visibility: hidden;
   }
 }
 
@@ -76,11 +78,25 @@
 // -------- zoom相关 start--------- //
 
 .toolBar {
-  position: absolute;
+  .toolBlock();
   width: 32px;
   height: 64px;
-  right: 24px;
   bottom: 24px;
+}
+
+.tooBarIcon {
+  cursor: pointer;
+  fill: var(--textCommonTertiary);
+  &:hover {
+    fill: var(--textBrandDefault);
+  }
+}
+
+.toolBlock {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  right: 24px;
   background-color: var(--bgCommonHigh);
   box-shadow: 0px 2px 12px var(--shadowCommonShadow1);
   border-radius: 4px;
@@ -90,13 +106,23 @@
   flex-direction: column;
   justify-content: space-around;
   align-items: center;
-  .tooBarIcon {
-    cursor: pointer;
-    fill: var(--textCommonTertiary);
-    &:hover {
+}
+
+.labelControl {
+  .toolBlock();
+  bottom: 136px;
+  cursor: pointer;
+  &:hover {
+    svg {
       fill: var(--textBrandDefault);
     }
   }
+}
+
+.backPosition {
+  .toolBlock();
+  bottom: 96px;
+  cursor: pointer;
 }
 
 // -------- zoom相关 end--------- //
@@ -106,21 +132,46 @@
 :global {
   .infowindowContent {
     display: block;
-    max-width: 164px;
-    height: 32px;
+    width: 225px;
+    height: 60px;
     background-color: var(--bgCommonHigh);
-    border: 1px solid var(--borderCommon);
-    border-radius: 4px;
-    padding: 5px 8px;
-    font-family: 'PingFang SC';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 22px;
-    text-align: center;
-    color: var(--textCommonPrimary);
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
+    // border: 1px solid var(--borderCommon);
+    border-radius: 8px;
+    padding: 8px 12px;
+    position: relative;
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 103px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 6px 10px 0 10px;
+      border-color: var(--bgCommonHigh) transparent transparent transparent;
+      z-index: 99;
+    }
+    h1 {
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 22px;
+      text-align: center;
+      color: var(--textCommonPrimary);
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      margin: 0;
+      padding: 0;
+    }
+    p {
+      color: var(--textCommonTertiary);
+      margin: 0;
+      padding: 0;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
   }
 }

@@ -4,6 +4,7 @@ export interface IPlugins {
   geocoder?: any; // 地图转码
   transfer?: any; // 路线规划
   autoComplete?: any, // 搜索
+  citySearch?: any, // 城市定位
 }
 
 export interface ISimpleRecords {

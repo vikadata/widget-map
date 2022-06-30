@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker } from '@vikadata/widget-sdk';
-import { RadioGroup, Radio } from '@vikadata/components';
+import { RadioGroup, Radio, TextInput } from '@vikadata/components';
 import styles from './setting.module.less';
 import { InformationLargeOutlined } from '@vikadata/icons';
 
@@ -20,7 +20,7 @@ export const Setting: React.FC = () => {
   // const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
 
   // 高德apiToken
-  // const [apiToken, setApiToken] = useCloudStorage<string>('apiToken', '5b625cd96fdd79c2918cf5ec2cd7720c');
+  const [apiToken, setApiToken] = useCloudStorage<string>('apiToken');
   // const [securityJsCode, setSecurityJsCode] = useCloudStorage<string>('securityJsCode', '41d2e666297c21beda8897b2dfecc92f');
 
   return isSettingOpened ? (
@@ -72,6 +72,14 @@ export const Setting: React.FC = () => {
                 onChange={option => setTitleFieldId(option.value)} 
               />
             </FormItem>
+            {/* <h1>其他配置</h1>
+            <FormItem label="第三方 API 秘钥" help="如何获取秘钥?" link="https:www.baidu.com">
+              <TextInput
+                placeholder="请输入内容"
+                value={apiToken}
+                onChange={e => setApiToken(e.target.value)}
+              />
+            </FormItem> */}
             {/* <FormItem label="" >
               <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
             </FormItem> */}
@@ -93,7 +101,7 @@ const FormItem = (props : IFormItemProps) => {
   const {label, children, help, link } = props;
   return (
     <div style={{display: 'flex', flexDirection: 'column', marginBottom: 16}}>
-      <label className={styles.settingLabel} >{label} { help && <a href={link}>{help}</a> }</label>
+      <label className={styles.settingLabel} >{label} { help && <a href={link} target="_blank">{help}</a> }</label>
       {children}
     </div>
   )

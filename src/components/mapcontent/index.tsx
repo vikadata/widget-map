@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord } from '@vikadata/widget-sdk';
 import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce } from 'ahooks';
-import { TextInput, Message } from '@vikadata/components';
+import { TextInput, Message, Tooltip } from '@vikadata/components';
 import styles from './style.module.less';
-import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined} from '@vikadata/icons';
+import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, TitleTemplateFilled } from '@vikadata/icons';
 
 import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
@@ -58,7 +58,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 地理编码或者坐标转换之后的Records
   // const [markAddressRecords, setMarkAddressRecords] = useCloudStorage<any>('markAddressData');
   
-  
+  const [isShowLabel, setIsShowLabel] = useState<boolean>(false);
   
   
   // 默认Icon 配置
@@ -74,9 +74,9 @@ export const MapContent: React.FC<mapContentProps> = props => {
   const infoWindow =  useMemo(() => { 
     return lodingStatus ? new AMap.InfoWindow({
       content: '<div class="infowindowContent" >11111</div>',  //传入 dom 对象，或者 html 字符串
-      offset: [22, -12],
+      offset: [0, -32],
       isCustom: true,
-      anchor: 'middle-left'
+      // anchor: 'middle-left'
     }) : null;
   }, [AMap, lodingStatus]);
 
@@ -109,27 +109,25 @@ export const MapContent: React.FC<mapContentProps> = props => {
     } 
   }, [activeCell, map]);
 
-  // 监听地图的zooms改变
-  // useEffect(() => {
-  //   if(!map) {
-  //     return;
-  //   }    
-  //   map.on('zoomchange', e =>{
-  //       const zoom =  map.getZoom();
-  //       console.log('zoom', zoom);
-  //       const label = document.getElementsByClassName('amap-marker-label');
-  //       const labelArr = Object.keys(label);
-  //       if(zoom < 12) {
-  //         labelArr.forEach(item=> {
-  //           label[item].style.visibility = 'hidden';
-  //         });
-  //       } else {
-  //         labelArr.forEach(item=> {
-  //           label[item].style.visibility = 'visible';
-  //         });
-  //       }
-  //   });
-  // },[map]);
+  // 切换Label
+  useEffect(() => {
+    if(!map) {
+      return;
+    }
+    const label = document.getElementsByClassName('amap-marker-label');
+    const labelArr = Object.keys(label);
+    if(!isShowLabel) {
+      labelArr.forEach(item=> {
+        label[item].style.visibility = 'hidden';
+      });
+    } else {
+      labelArr.forEach(item=> {
+        label[item].style.visibility = 'visible';
+      });
+    }
+  
+    
+  },[map, isShowLabel]);
 
   // 设置搜索定位功能
   useEffect(() => {
@@ -325,10 +323,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
       //...其他Marker选项...，不包括content
       // title: record.title,
       map: map,
-      // label: { 
-      //   content: record.title,
-      //   direction: 'right'
-      // },
+      label: { 
+        content: record.title,
+        direction: 'right'
+      },
       anchor: 'bottom-center',
       clickable: true,
       position: record.location,
@@ -341,9 +339,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
     marker.on('click', () => {
       expandRecord({recordIds: [record.id]});
     });
-
     marker.on('mouseover', () => {
-      infoWindow.setContent(`<div class="infowindowContent" >${record.title}</div>`)
+      infoWindow.setContent(`<div class="infowindowContent" ><h1>${record.title}</h1><p>${record.address}</p></div>`)
       infoWindow.open(map, record.location);
     });
     
@@ -354,6 +351,18 @@ export const MapContent: React.FC<mapContentProps> = props => {
     return marker;
   }
 
+  function backLocation() {
+    if(plugins)
+    plugins.citySearch.getLocalCity(function (status, result) {
+      if (status === 'complete' && result.info === 'OK') {
+        // 查询成功，result即为当前所在城市信息
+        const citybounds = result.bounds;
+        map.setBounds(citybounds);
+      } else{
+        Message.error({ content: `定位失败` });
+      }
+    });
+  }
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
@@ -371,6 +380,15 @@ export const MapContent: React.FC<mapContentProps> = props => {
                   suffix={<SearchOutlined />}
                 />
               </div>
+          </div>
+          <Tooltip content={isShowLabel ? '隐藏地址名称' : '显示地址名称'} placement='left'>
+            <div className={styles.labelControl} >
+                { isShowLabel ? <EyeNormalOutlined size={16} className={styles.tooBarIcon} onClick={() => setIsShowLabel(!isShowLabel)}   /> : 
+                <EyeCloseOutlined size={16} className={styles.tooBarIcon} onClick={() => setIsShowLabel(!isShowLabel)} /> }
+            </div>
+          </Tooltip>
+          <div className={styles.backPosition} onClick={backLocation} >
+             <TitleTemplateFilled size={16} className={styles.tooBarIcon} />
           </div>
           <div className={styles.toolBar}>
             <ZoomInOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />

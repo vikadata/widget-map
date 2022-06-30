@@ -33,10 +33,10 @@ export const MapComponent: React.FC = () => {
   // 配置好的插件对象集合
   const [plugins, setPlugins] = useState<IPlugins>();
   // 高德apiToken
-  const [apiToken] = useCloudStorage<string>('apiToken', '5b625cd96fdd79c2918cf5ec2cd7720c');
-  const [securityJsCode] = useCloudStorage<string>('securityJsCode', '41d2e666297c21beda8897b2dfecc92f');
+  const [apiToken] = useCloudStorage<string>('apiToken', '');
+  const [securityJsCode] = useCloudStorage<string>('securityJsCode', '');
   window._AMapSecurityConfig = {
-    securityJsCode: securityJsCode || '41d2e666297c21beda8897b2dfecc92f',
+    securityJsCode: 'e21828e25e02c281835f7b65c42fc418',
   }
   // 组件初始化时，加载 sdk 地图实例
   useEffect(() => {
@@ -46,7 +46,7 @@ export const MapComponent: React.FC = () => {
     }
     console.log('apiToken', apiToken);
     AMapLoader.load({
-      "key": apiToken || '5b625cd96fdd79c2918cf5ec2cd7720c',
+      "key": 'e979c61a0a16f0d80286e32c5075be6a',
       "version": "2.0",
       "plugins":[
         'AMap.Geocoder', 
@@ -54,6 +54,7 @@ export const MapComponent: React.FC = () => {
         "AMap.ToolBar", 
         "AMap.AutoComplete",
         "AMap.PlaceSearch",
+        "AMap.CitySearch"
       ],
       "AMapUI": {             // 是否加载 AMapUI，缺省不加载
           "version": '1.1',   // AMapUI 版本
@@ -82,7 +83,7 @@ export const MapComponent: React.FC = () => {
     const amap = new AMap.Map('mapContainer', {
       zoom: 4,//级别
       viewMode: '2D',//使用3D视图
-      mapStyle: 'amap://styles/b379277160c9c3ce520627ad2e4bd22c',
+      mapStyle: 'amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605',
       jogEnable: false,
       animateEnable: false
     });
@@ -119,10 +120,14 @@ export const MapComponent: React.FC = () => {
       input: "searchInput"
     });
 
+    // 城市定位
+    var citySearch = new AMap.CitySearch();
+
     setPlugins({
       //transfer,
       geocoder,
-      autoComplete
+      autoComplete,
+      citySearch
     });
 
   }
@@ -137,9 +142,9 @@ export const MapComponent: React.FC = () => {
     }
 
     if(theme === "light") {
-      map.setMapStyle('amap://styles/b379277160c9c3ce520627ad2e4bd22c');
+      map.setMapStyle('amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605');
     } else {
-      map.setMapStyle('amap://styles/2631e0b37c5791cd1a54ce45f94c16a7');
+      map.setMapStyle('amap://styles/0c95e40f6b9a6ef8a0b203e23fc4599f');
     }
 
   }, [theme, map]);

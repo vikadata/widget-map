@@ -245,8 +245,12 @@ export const MapContent: React.FC<mapContentProps> = props => {
       return locationRecoreds.filter(Boolean);
   }
 
+
+
+
   // 配置改动直接全部更新
   useAsyncEffect(async () => {
+    return;
     if(!addressType || !addressFieldId || !records || !lodingStatus) {
       return;
     }
@@ -274,6 +278,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   // records改动地址名称字段处理存入markersLayer 增删减更新
   useAsyncEffect(async function getAddressList() {
+    return;
     if(!addressType || !addressFieldId || !records || !lodingStatus) {
       return;
     }
@@ -303,7 +308,96 @@ export const MapContent: React.FC<mapContentProps> = props => {
       setMakerslayer(dealAddressRecordsCopy);
     }
   },[records]);
+  
+  useEffect(() => {
+    if(!records || !plugins || !map) {
+      return;
+    }
+    const recordsSlice: ISimpleRecords[] = slice(records, 0, 20000)
+    .map(record => {
+      return {
+        title: record.getCellValueString(titleFieldID) || '',
+        address: record.getCellValueString(addressFieldId) || '',
+        id: record.id,
+        isAddressUpdate: true,
+        isTitleUpdate: true,
+      }
+    });
+    // console.log('recordsSlice--->', recordsSlice);
 
+    const recordsGeo = recordsSlice.map(record => {
+      const location = record.address ? record.address.split(',') : '';
+      if(!location || location.length !== 2) {
+       
+        return null;
+      } else {
+        return {
+          "type": "Feature",
+          "properties": {
+              "name": record.title,
+              "id": record.id,
+          },
+          "geometry": {
+              "type": "Point",
+              "coordinates": [
+                parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
+            ]
+          }
+        }
+      }
+    }).filter(Boolean); 
+
+    console.log('recordsGeo-->', recordsGeo);
+
+    const loca = new plugins.Loca.Container({
+        map,
+    });
+    // console.log('loca---->', loca);
+
+    const layer = new plugins.Loca.IconLayer({
+        zIndex: 99,
+        opacity: 1,
+        visible: true,
+    });
+
+    const geo = new plugins.Loca.GeoJSONSource({
+        data: {
+            "type": "FeatureCollection",
+            "features": recordsGeo,
+        },
+    });
+    layer.setSource(geo);
+    layer.setStyle({
+      unit: 'px',
+      icon: 'https://s1.vika.cn/space/2022/06/16/10106551d68d43699bbad58527e357da?attname=mark.svg',
+      iconSize: [30,30],
+      // offset: [0, -40],
+      rotation: 0,
+    })
+    loca.add(layer);
+    // 拾取测试
+    map.on('click', (e) => {
+        const feat = layer.queryFeature(e.pixel.toArray());
+        console.log('feat', feat);
+        if (feat) {
+            // layer.setStyle({
+            //     unit: 'px',
+            //     iconSize: (i, feature) => {
+            //         if (feature === feat) {
+            //             return [60, 60];
+            //         }
+            //         return [40, 40];
+            //     },
+            // });
+            expandRecord({recordIds: [feat.properties.id]});
+        }
+    });
+    map.on('mouseover', (e) => {
+      const feat = layer.queryFeature(e.pixel.toArray());
+      console.log('feat', feat);
+    });
+    // layer.show();
+  }, [records, titleFieldID, updateMap]);
  
   /* 创建标记点 
   record: 标点信息

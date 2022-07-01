@@ -1,9 +1,9 @@
 {
-  "packageId": "wpk6JgDwaUpKv",
+  "packageId": "wpkkXxdjAKq4X",
   "spaceId": "spcGvC7cu3hQy",
   "entry": "./src/index.tsx",
   "name": {
-    "zh-CN": "地图小程序",
+    "zh-CN": "地图小程序可视化版本",
     "en-US": "map"
   },
   "icon": "./package_icon.png",
@@ -14,6 +14,6 @@
     "en-US": "map"
   },
   "globalPackageId": "wpk2jJ7qZS0VG",
-  "authorName": "Vika",
-  "sandbox": true
+  "authorName": "Vika"
+
 }

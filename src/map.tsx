@@ -10,7 +10,8 @@ declare global {
   interface Window { 
     AMap: any, // 地图API
     infoWindow: AMap.InfoWindow, // 信息弹窗实例
-    _AMapSecurityConfig: IAMapSecurityConfig
+    _AMapSecurityConfig: IAMapSecurityConfig,
+    Loca: any
   }
 }
 
@@ -59,6 +60,9 @@ export const MapComponent: React.FC = () => {
       "AMapUI": {             // 是否加载 AMapUI，缺省不加载
           "version": '1.1',   // AMapUI 版本
           "plugins":['overlay/SimpleMarker'],       // 需要加载的 AMapUI ui插件
+      },
+      "Loca":{                // 是否加载 Loca， 缺省不加载
+          "version": '2.0.0'  // Loca 版本，缺省 1.3.2
       },
     }).then((AMap) => {
       setAMap(AMap);
@@ -121,13 +125,16 @@ export const MapComponent: React.FC = () => {
     });
 
     // 城市定位
-    var citySearch = new AMap.CitySearch();
+    const citySearch = new AMap.CitySearch();
 
+    // Loca 数据可视化
+    const Loca = window.Loca;
     setPlugins({
       //transfer,
       geocoder,
       autoComplete,
-      citySearch
+      citySearch,
+      Loca
     });
 
   }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker } from '@vikadata/widget-sdk';
-import { RadioGroup, Radio, TextInput } from '@vikadata/components';
+import { RadioGroup, Radio, TextInput, Button } from '@vikadata/components';
 import styles from './setting.module.less';
 import { InformationLargeOutlined } from '@vikadata/icons';
 
@@ -17,7 +17,7 @@ export const Setting: React.FC = () => {
   const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title');
 
   // 更新地图
-  // const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
+  const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
 
   // 高德apiToken
   const [apiToken, setApiToken] = useCloudStorage<string>('apiToken');
@@ -80,9 +80,9 @@ export const Setting: React.FC = () => {
                 onChange={e => setApiToken(e.target.value)}
               />
             </FormItem> */}
-            {/* <FormItem label="" >
+            <FormItem label="" >
               <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
-            </FormItem> */}
+            </FormItem>
           </div>
         </div>
       </div>

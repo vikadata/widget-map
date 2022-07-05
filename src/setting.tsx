@@ -20,8 +20,8 @@ export const Setting: React.FC = () => {
   // const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
 
   // 高德apiToken
-  const [apiToken, setApiToken] = useCloudStorage<string>('apiToken');
-  // const [securityJsCode, setSecurityJsCode] = useCloudStorage<string>('securityJsCode', '41d2e666297c21beda8897b2dfecc92f');
+  // const [apiToken, setApiToken] = useCloudStorage<string>('apiToken');
+  // const [securityJsCode, setSecurityJsCode] = useCloudStorage<string>('securityJsCode');
 
   return isSettingOpened ? (
     <div className={styles.settingContent}>
@@ -73,11 +73,18 @@ export const Setting: React.FC = () => {
               />
             </FormItem>
             {/* <h1>其他配置</h1>
-            <FormItem label="第三方 API 秘钥" help="如何获取秘钥?" link="https:www.baidu.com">
+            <FormItem label="第三方 API key" help="如何获取秘钥?" link="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare">
               <TextInput
                 placeholder="请输入内容"
                 value={apiToken}
                 onChange={e => setApiToken(e.target.value)}
+              />
+            </FormItem>
+            <FormItem label="第三方 API 安全密钥"  link="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare">
+              <TextInput
+                placeholder="请输入内容"
+                value={securityJsCode}
+                onChange={e => setSecurityJsCode(e.target.value)}
               />
             </FormItem> */}
             {/* <FormItem label="" >

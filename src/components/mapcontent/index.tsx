@@ -4,7 +4,7 @@ import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } fr
 import { useDebounce } from 'ahooks';
 import { TextInput, Message, Tooltip } from '@vikadata/components';
 import styles from './style.module.less';
-import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, TitleTemplateFilled } from '@vikadata/icons';
+import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined } from '@vikadata/icons';
 
 import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
@@ -366,7 +366,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
-      <div id="mapContainer" style={{ width: '100%', height: '100%' }}>
+      <div id="mapContainer" style={{ width: '100%', height: '100%', position: 'relative' }}>
           <div className={styles.searchContent}>
               <div className={styles.searchBlock}>
                 <TextInput
@@ -388,7 +388,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
             </div>
           </Tooltip>
           <div className={styles.backPosition} onClick={backLocation} >
-             <TitleTemplateFilled size={16} className={styles.tooBarIcon} />
+             <PositionOutlined size={16} className={styles.tooBarIcon} />
           </div>
           <div className={styles.toolBar}>
             <ZoomInOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />

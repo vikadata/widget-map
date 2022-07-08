@@ -1,5 +1,5 @@
 {
-  "version": "0.0.14",
+  "version": "0.0.30",
   "description": "a vika widget",
   "engines": {
     "node": ">=8.x"
@@ -26,15 +26,17 @@
   },
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
+    "@amap/amap-jsapi-types": "^0.0.8",
     "@types/react": "^16.9.43",
     "@types/react-dom": "^16.9.8",
-    "@vikadata/components": "^0.0.3",
+    "@vikadata/components": "^0.0.4",
     "@vikadata/icons": "^0.0.1",
-    "@vikadata/widget-sdk": "^0.0.2",
+    "@vikadata/widget-sdk": "0.0.7",
     "ahooks": "^3.1.13",
     "css-loader": "^6.7.1",
     "less": "^4.1.2",
     "less-loader": "^11.0.0",
+    "lodash": "^4.17.21",
     "react-amap": "^1.2.8",
     "style-loader": "^3.3.1",
     "typescript": "4.1.2"
@@ -44,6 +46,6 @@
     "@vikadata/widget-webpack-bundler": "^0.0.9"
   },
   "authorName": "__template__",
-  "authorLink": "https://vika.cn",
+  "authorLink": "https://integration.vika.ltd/",
   "authorEmail": "dev@vikadata.com"
 }

@@ -3,8 +3,8 @@
   "spaceId": "spcGvC7cu3hQy",
   "entry": "./src/index.tsx",
   "name": {
-    "zh-CN": "地图小程序",
-    "en-US": "map"
+    "zh-CN": "坐标位置地图",
+    "en-US": "Location map"
   },
   "icon": "./package_icon.png",
   "cover": "./cover.png",

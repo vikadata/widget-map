@@ -365,8 +365,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
   }
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
       <div id="mapContainer" style={{ width: '100%', height: '100%', position: 'relative' }}>
+      </div>
+      <div>
           <div className={styles.searchContent}>
               <div className={styles.searchBlock}>
                 <TextInput
@@ -388,13 +390,13 @@ export const MapContent: React.FC<mapContentProps> = props => {
             </div>
           </Tooltip>
           <div className={styles.backPosition} onClick={backLocation} >
-             <PositionOutlined size={16} className={styles.tooBarIcon} />
+            <PositionOutlined size={16} className={styles.tooBarIcon} />
           </div>
           <div className={styles.toolBar}>
             <ZoomInOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />
             <ZoomOutOutlined size={16} className={styles.tooBarIcon} onClick={() => { map.zoomOut() }} />
           </div>
-      </div>
+        </div>
     </div>
   );
 }

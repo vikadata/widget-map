@@ -10,10 +10,10 @@
   "cover": "./cover.png",
   "authorIcon": "./author_icon.png",
   "description": {
-    "zh-CN": "根据定位在地图上显示标点，以及标点详细信息",
-    "en-US": "map"
+    "zh-CN": "将地理位置在地图上以坐标点的形式展示出来，帮助你了解位置分布情况",
+    "en-US": "Show the geographical location on the map as coordinate points"
   },
-  "globalPackageId": "wpk2jJ7qZS0VG",
+  "globalPackageId": "wpkzrscH0cVTL",
   "authorName": "Vika",
   "sandbox": true
 }

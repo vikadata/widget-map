@@ -15,3 +15,8 @@ export interface ISimpleRecords {
   isAddressUpdate?: boolean;
   isTitleUpdate?: boolean;
 }
+
+export interface IMapToken {
+  key: string | null;
+  security: string | null;
+}

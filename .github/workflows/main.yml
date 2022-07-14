@@ -1,0 +1,74 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches:
+      - integration
+      - master
+    paths:
+      - 'package.json'
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        # persist-credentials: false # otherwise, the token used is the GITHUB_TOKEN, instead of your personal access token.
+        fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
+    - name: Get yarn cache directory path
+      id: yarn-cache-dir-path
+      run: echo "::set-output name=dir::node_modules"
+
+    - uses: actions/cache@v3
+      id: yarn-cache # use this to check for `cache-hit` (`steps.yarn-cache.outputs.cache-hit != 'true'`)
+      with:
+        path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+        key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-yarn-
+
+    - name: Install NPM dependencies
+      run: yarn install
+
+    - name: Config git
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+
+    - name: Get submit version
+      id: version
+      uses: ashley-taylor/read-json-property-action@v1.0
+      with:
+        path: ./package.json
+        property: version
+
+    - name: Extract branch name
+      shell: bash
+      run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      id: extract_branch
+
+    # integration submit
+    - name: Submit Widget
+      if: ${{ steps.extract_branch.outputs.branch == 'integration' }}
+      run: |
+        echo "Submit Widget integration"
+        npx -y @vikadata/widget-cli submit --version ${{steps.version.outputs.value}} --host ${{ secrets.VIKA_INTEGRATION_HOST }} --token ${{ secrets.VIKA_INTEGRATION_API_TOKEN }}
+
+    # production submit
+    - name: Submit Widget
+      if: ${{ steps.extract_branch.outputs.branch == 'master' }}
+      run: |
+        echo "Submit Widget production"
+        npx -y @vikadata/widget-cli submit --version ${{steps.version.outputs.value}} --host ${{ secrets.VIKA_PRODUCTION_HOST }} --token ${{ secrets.VIKA_PRODUCTION_API_TOKEN }}
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}

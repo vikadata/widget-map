@@ -1,10 +1,10 @@
 {
-  "packageId": "wpkTetikDKFxs",
-  "spaceId": "spcETbEk47JZh",
+  "packageId": "wpk6JgDwaUpKv",
+  "spaceId": "spcGvC7cu3hQy",
   "entry": "./src/index.tsx",
   "name": {
-    "zh-CN": "地图小程序",
-    "en-US": "map"
+    "zh-CN": "坐标位置地图",
+    "en-US": "Location map"
   },
   "icon": "./package_icon.png",
   "cover": "./cover.png",
@@ -13,5 +13,7 @@
     "zh-CN": "根据定位在地图上显示标点，以及标点详细信息",
     "en-US": "map"
   },
-  "globalPackageId": "wpk2jJ7qZS0VG"
+  "globalPackageId": "wpk2jJ7qZS0VG",
+  "authorName": "Vika",
+  "sandbox": true
 }

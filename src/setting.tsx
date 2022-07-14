@@ -1,112 +1,114 @@
 import React from 'react';
-import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useFields,  } from '@vikadata/widget-sdk';
-import { Box, Select, Button, TextInput } from '@vikadata/components';
+import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker } from '@vikadata/widget-sdk';
+import { RadioGroup, Radio, TextInput } from '@vikadata/components';
 import styles from './setting.module.less';
-
-
-interface InfolistType{
-  text: string,
-  value: string,
-}
+import { InformationLargeOutlined } from '@vikadata/icons';
 
 export const Setting: React.FC = () => {
+  // 设置是否打开
   const [isSettingOpened] = useSettingsButton();
+  // 视图ID
   const [viewId, setViewId] = useCloudStorage<string>('selectedViewId');
-  const [mapSettingList, setMapSettingList] = useCloudStorage<Array<InfolistType>>('mapSettingList', [{ text: '地址', value: ''}, { text: '名称', value: ''}]);
-  const [mapSettingListStatus, setMapSettingListStatus] = useCloudStorage<boolean>('mapSettingListStatus', false);
+  // 地址字段ID 以及类型
   const [addressType, setAddressType] = useCloudStorage<string | number>('addressType', 'text');
-  const [apiKey, setApiKey] = useCloudStorage<string>('apiKey');
-  const [securityCode, setSecurityCode] = useCloudStorage<string>('securityCode');
+  const [addressFieldId, setAddressFieldId] = useCloudStorage<string>('address');
 
-  const addressTypeOption = [
-    {
-      label: '文本',
-      value: 'text'
-    },
-    {
-      label: '经纬度',
-      value: 'latlng',
-    }
-  ]
+  // 名称字段ID
+  const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title');
 
-  // 更新配置选项
-  function updateInfoList(index: number, type: string, data: string) {
-    let newInfoWindowList = mapSettingList;
-    newInfoWindowList[index][type] = data;
-    setMapSettingList([...newInfoWindowList]);
-  }
+  // 更新地图
+  // const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
 
-  // 确认配置选项
-  function confirmMapSetting() {
-    setMapSettingListStatus(false);
-    let check = true;
-    mapSettingList.forEach(formItem => {
-      if(formItem.text === '' || formItem.value === '' ) {
-        check = false;
-      }
-    });
-    setMapSettingListStatus(check);
-  }
+  // 高德apiToken
+  // const [apiToken, setApiToken] = useCloudStorage<string>('apiToken');
+  // const [securityJsCode, setSecurityJsCode] = useCloudStorage<string>('securityJsCode');
 
   return isSettingOpened ? (
-    <div style={{ flexShrink: 0, width: '300px', borderLeft: 'solid 1px gainsboro'}}>
-      <h1 style={{ paddingLeft: "5px", marginBottom: 0 }}>设置</h1>
+    <div className={styles.settingContent}>
+      <h1>地图配置 <a href="" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
       <div style={{ display: 'flex', height: '100%' }}>
         <div style={{ flexGrow: 1, overflow: 'auto'}}>
-        <Box
-          padding="30px 10px 30px 10px"
-          borderBottom="2px solid lightgrey"
-        >
-          <FormItem label="View" >
-            <ViewPicker   viewId={viewId} onChange={option => setViewId(option.value)} />
-          </FormItem>
-        </Box>
-        <Box
-          padding="30px 10px 30px 10px"
-          borderBottom="2px solid lightgrey"
-        >
           <div className={styles.formItem}>
-            <h3>填写API Key</h3>
-            <TextInput 
-              block
-              type="password"
-              value={apiKey}
-              placeholder="请输入API Key"
-              onChange={e => setApiKey(e.target.value)}
-            />
-            <h3>填写API Key安全密钥</h3>
-            <TextInput 
-              block
-              type="password"
-              value={securityCode}
-              placeholder="请输入API Key安全密钥"
-              onChange={e => setSecurityCode(e.target.value)}
-            />
-            <h3>选择地址字段类型</h3>
-            <Select options={addressTypeOption}
-              value={addressType}
-              onSelected={(option) => {
-                setAddressType(option.value);
-              }} />
-            <h3>选择地址字段</h3>
-            <FieldPicker  viewId={viewId} fieldId={mapSettingList[0].value} onChange={option => updateInfoList( 0,  'value', option.value)} />
-            <h3>选择名称字段</h3>
-            <FieldPicker  viewId={viewId} fieldId={mapSettingList[1].value} onChange={option => updateInfoList( 1,  'value', option.value)} />
+            <FormItem label="选择一个视图来读取地理位置" >
+              <ViewPicker   viewId={viewId} onChange={option => setViewId(option.value)} />
+            </FormItem>
+            <FormItem label="选择一个包含地址或者经纬度的字段" >
+              <FieldPicker  
+                viewId={viewId} 
+                fieldId={addressFieldId}
+                onChange={option => setAddressFieldId(option.value)} 
+              />
+            </FormItem>
+            {/* <FormItem label="填写apiToken">
+              <TextInput
+                block
+                placeholder="请输入apiToken"
+                value={apiToken}
+                onChange={e => setApiToken(e.target.value)}
+                type="password"
+              />
+            </FormItem>
+            <FormItem label="填写securityJsCode">
+              <TextInput
+                block
+                placeholder="请输入securityJsCode"
+                value={securityJsCode}
+                onChange={e => setSecurityJsCode(e.target.value)}
+                type="password"
+              />
+            </FormItem> */}
+            <FormItem label="切换地址的数据类型" help="数据类型说明">
+                <RadioGroup name="btn-group-with-default" isBtn value={addressType} block onChange={(e, value) => {
+                  setAddressType(value);
+                }}>
+                  <Radio value="text">文本</Radio>
+                  <Radio value="latlng">经纬度</Radio>
+                </RadioGroup>
+            </FormItem>
+            <FormItem label="选择一个字段作为地址名称" >
+              <FieldPicker  
+                viewId={viewId} 
+                fieldId={titleFieldID} 
+                onChange={option => setTitleFieldId(option.value)} 
+              />
+            </FormItem>
+            {/* <h1>其他配置</h1>
+            <FormItem label="第三方 API key" help="如何获取秘钥?" link="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare">
+              <TextInput
+                placeholder="请输入内容"
+                value={apiToken}
+                onChange={e => setApiToken(e.target.value)}
+              />
+            </FormItem>
+            <FormItem label="第三方 API 安全密钥"  link="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare">
+              <TextInput
+                placeholder="请输入内容"
+                value={securityJsCode}
+                onChange={e => setSecurityJsCode(e.target.value)}
+              />
+            </FormItem> */}
+            {/* <FormItem label="" >
+              <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
+            </FormItem> */}
           </div>
-          <div className={styles.buttonContent}>
-            <Button className={styles.marginType} variant="jelly" color="primary" block  onClick={confirmMapSetting}>确认</Button>
-          </div>
-        </Box>
         </div>
       </div>
     </div>
   ) : null;
 };
 
-const FormItem = ({label, children}) => {
+interface IFormItemProps {
+  label: string;
+  children: any;
+  help?: string;
+  link?: string;
+}
+
+const FormItem = (props : IFormItemProps) => {
+  const {label, children, help, link } = props;
   return (
     <div style={{display: 'flex', flexDirection: 'column', marginBottom: 16}}>
-      <label style={{paddingBottom: 6, fontSize: 13, color: '#636363', fontWeight: 'bold'}}>{label}</label>
+      <label className={styles.settingLabel} >{label} { help && <a href={link} target="_blank">{help}</a> }</label>
       {children}
     </div>
   )

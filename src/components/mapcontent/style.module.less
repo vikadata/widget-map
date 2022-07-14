@@ -1,11 +1,177 @@
-.searchContent {
-  position: absolute;
-  right: 20px;
-  top: 20px;
-  z-index: 99;
+
+// -------- 搜索相关 start--------- //
+:global {
+  .amap-sug-result {
+    // width: 196px;
+    background-color: var(--bgCommonHigh);
+    box-shadow: 0px 4px 8px var(--shadowCommonShadow1);
+    border: none;
+    border-radius: 4px;
+    margin-left: -9px;
+    padding: 5px 0;
+    .auto-item {
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 22px;
+      color: var(--textCommonPrimary);
+      padding: 5px 8px;
+      &:hover {
+        background: var(--bgBglessHover);
+      }
+    }
+  }
 }
 
-.searchInput {
-  background-color: #fff;
-  border: 1px solid #C9C9C9;
+.searchContent {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  z-index: 99;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.searchBlock {
+  width: 160px;
+  
+}
+
+
+.searchIcon {
+  color: var(--colorFontColorFC1);
+}
+
+
+// -------- 搜索相关 end--------- //
+
+
+// -------- 图标label start --------- //
+:global {
+  .amap-marker-label {
+    // width: 86px;
+    display: block;
+    max-width: 164px;
+    height: 32px;
+    background-color: var(--bgCommonHigh);
+    border: 1px solid var(--borderCommon);
+    border-radius: 4px;
+    padding: 5px 8px;
+    font-family: 'PingFang SC';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 22px;
+    text-align: center;
+    color: var(--textCommonPrimary);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    visibility: hidden;
+  }
+}
+
+
+// -------- zoom相关 start--------- //
+
+.toolBar {
+  .toolBlock();
+  width: 32px;
+  height: 64px;
+  bottom: 24px;
+}
+
+.tooBarIcon {
+  cursor: pointer;
+  fill: var(--textCommonTertiary);
+  &:hover {
+    fill: var(--textBrandDefault);
+  }
+}
+
+.toolBlock {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  right: 24px;
+  background-color: var(--bgCommonHigh);
+  box-shadow: 0px 2px 12px var(--shadowCommonShadow1);
+  border-radius: 4px;
+  z-index: 99;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.labelControl {
+  .toolBlock();
+  bottom: 136px;
+  cursor: pointer;
+  &:hover {
+    svg {
+      fill: var(--textBrandDefault);
+    }
+  }
+}
+
+.backPosition {
+  .toolBlock();
+  bottom: 96px;
+  cursor: pointer;
+}
+
+// -------- zoom相关 end--------- //
+
+
+// -------- 信息窗体相关 --------- //
+:global {
+  .infowindowContent {
+    display: block;
+    width: 225px;
+    height: 60px;
+    background-color: var(--bgCommonHigh);
+    // border: 1px solid var(--borderCommon);
+    border-radius: 8px;
+    padding: 8px 12px;
+    position: relative;
+    &:after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 103px;
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 6px 10px 0 10px;
+      border-color: var(--bgCommonHigh) transparent transparent transparent;
+      z-index: 99;
+    }
+    h1 {
+      font-family: 'PingFang SC';
+      font-style: normal;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 22px;
+      text-align: center;
+      color: var(--textCommonPrimary);
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      margin: 0;
+      padding: 0;
+    }
+    p {
+      color: var(--textCommonTertiary);
+      margin: 0;
+      padding: 0;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+  }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker } from '@vikadata/widget-sdk';
+import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useActiveViewId, useViewIds, useFields } from '@vikadata/widget-sdk';
 import { RadioGroup, Radio, TextInput, Modal, Message, LinkButton } from '@vikadata/components';
 import styles from './setting.module.less';
 import { InformationLargeOutlined, ChevronRightOutlined } from '@vikadata/icons';
@@ -9,14 +9,19 @@ import AMapLoader from '@amap/amap-jsapi-loader';
 export const Setting: React.FC = () => {
   // 设置是否打开
   const [isSettingOpened] = useSettingsButton();
+  // useActiveViewId 存在在仪表盘下新建获取为空，所以需要拿到所有表的第一个
+  const defaultViewId = useActiveViewId() || useViewIds()[0];
+  const defaultFields = useFields(defaultViewId);
+  
   // 视图ID
-  const [viewId, setViewId] = useCloudStorage<string>('selectedViewId');
+  const [viewId, setViewId] = useCloudStorage<string>('selectedViewId', defaultViewId);
+  
   // 地址字段ID 以及类型
   const [addressType, setAddressType] = useCloudStorage<string | number>('addressType', 'text');
   const [addressFieldId, setAddressFieldId] = useCloudStorage<string>('address');
 
   // 名称字段ID
-  const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title');
+  const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title', defaultFields[0].fieldData.id);
 
   // 更新地图
   // const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);

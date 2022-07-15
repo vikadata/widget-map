@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord } from '@vikadata/widget-sdk';
+import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
 import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput, Message, Tooltip } from '@vikadata/components';
@@ -27,9 +27,11 @@ const limitRcord = 500;
 export const MapContent: React.FC<mapContentProps> = props => {
 
   const { lodingStatus, map, AMap, plugins} = props;
-
+  // useActiveViewId 存在在仪表盘下新建获取为空，所以需要拿到所有表的第一个
+  const defaultViewId = useActiveViewId() || useViewIds()[0];
+  const defaultFields = useFields(defaultViewId);
   // 获取表格视图ID
-  const [viewId] = useCloudStorage<string>('selectedViewId');
+  const [viewId] = useCloudStorage<string>('selectedViewId', defaultViewId);
   // 获取所有行的信息
   const records = useRecords(viewId);
   // 展开卡片
@@ -45,7 +47,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 地址字段ID
   const [addressFieldId] = useCloudStorage<string>('address');
   // 名称字段ID
-  const [titleFieldID] = useCloudStorage<string>('title');
+  const [titleFieldID] = useCloudStorage<string>('title', defaultFields[0].fieldData.id);
   // 地址字段
   // const addressField = useField(addressFieldId);
   // 获取表格选中信息

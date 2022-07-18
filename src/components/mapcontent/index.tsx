@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord } from '@vikadata/widget-sdk';
+import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
 import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput, Message, Tooltip, colorVars } from '@vikadata/components';
 import styles from './style.module.less';
-import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, TitleTemplateFilled } from '@vikadata/icons';
+import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined } from '@vikadata/icons';
 
 import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
@@ -22,15 +22,17 @@ interface mapContentProps {
 }
 
 // 最大限制列
-const limitRcord = 500;
+const limitRcord = 50000;
 
 
 export const MapContent: React.FC<mapContentProps> = props => {
 
   const { lodingStatus, map, AMap, plugins} = props;
-
+  // useActiveViewId 存在在仪表盘下新建获取为空，所以需要拿到所有表的第一个
+  const defaultViewId = useActiveViewId() || useViewIds()[0];
+  const defaultFields = useFields(defaultViewId);
   // 获取表格视图ID
-  const [viewId] = useCloudStorage<string>('selectedViewId');
+  const [viewId] = useCloudStorage<string>('selectedViewId', defaultViewId);
   // 获取所有行的信息
   const records = useRecords(viewId);
   // 展开卡片
@@ -46,7 +48,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 地址字段ID
   const [addressFieldId] = useCloudStorage<string>('address');
   // 名称字段ID
-  const [titleFieldID] = useCloudStorage<string>('title');
+  const [titleFieldID] = useCloudStorage<string>('title', defaultFields[0].fieldData.id);
   // 地址字段
   // const addressField = useField(addressFieldId);
   // 获取表格选中信息
@@ -65,8 +67,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 默认Icon 配置
   const iconDefaultConfig = useMemo(() => {
       return lodingStatus ? {
+        type: 'image',
         image: markerIcon,
         anchor:'center',
+        // size: [64, 30],
         // imageSize: new AMap.Size(22, 22),   // 根据所设置的大小拉伸或压缩图片
       } : null;
   }, [AMap, lodingStatus]);
@@ -170,10 +174,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 地址处理
   async function dealAddress(simpleRecords) {
 
-    const defaultIcon = new AMap.Icon({
+    const defaultIcon = {
       ...iconDefaultConfig,
       image: markerIcon,  // Icon的图像
-    });
+    };
     let locationRecoreds;
       if(addressType === 'text') {
         
@@ -277,6 +281,16 @@ export const MapContent: React.FC<mapContentProps> = props => {
     Message.success({ content: `图标渲染完成 渲染数目${locationRecoreds.length}` });
     
     setMakerslayer(locationRecoreds);
+    const labelsLayer = new AMap.LabelsLayer({
+        zooms: [3, 20],
+        zIndex: 1000,
+        // 该层内标注是否避让
+        collision: true,
+        // 设置 allowCollision：true，可以让标注避让用户的标注
+        allowCollision: true,
+    });
+    labelsLayer.add(locationRecoreds);
+    map.add(labelsLayer);
   }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
 
@@ -471,14 +485,16 @@ export const MapContent: React.FC<mapContentProps> = props => {
     if(!record.location) {
       return;
     }
-    const marker =  new AMap.Marker({
+    const marker =  new AMap.LabelMarker({
       icon,
       //...其他Marker选项...，不包括content
       // title: record.title,
-      map: map,
-      label: { 
+      text: { 
         content: record.title,
-        direction: 'right'
+        direction: 'right',
+        fontSize: 14,
+        fillColor: '#2E2E2E',
+        fold: true
       },
       anchor: 'bottom-center',
       clickable: true,
@@ -518,8 +534,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
   }
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      <div id="mapContainer" style={{ width: '100%', height: '100%' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div id="mapContainer" style={{ width: '100%', height: '100%', position: 'relative' }}>
+      </div>
+      <div>
           <div className={styles.searchContent}>
               <div className={styles.searchBlock}>
                 <TextInput
@@ -541,13 +559,13 @@ export const MapContent: React.FC<mapContentProps> = props => {
             </div>
           </Tooltip>
           <div className={styles.backPosition} onClick={backLocation} >
-             <TitleTemplateFilled size={16} className={styles.tooBarIcon} />
+            <PositionOutlined size={16} className={styles.tooBarIcon} />
           </div>
           <div className={styles.toolBar}>
             <ZoomInOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />
             <ZoomOutOutlined size={16} className={styles.tooBarIcon} onClick={() => { map.zoomOut() }} />
           </div>
-      </div>
+        </div>
     </div>
   );
 }

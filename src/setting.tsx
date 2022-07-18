@@ -1,27 +1,51 @@
-import React from 'react';
-import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker } from '@vikadata/widget-sdk';
-import { RadioGroup, Radio, TextInput, Button } from '@vikadata/components';
+import React, { useState } from 'react';
+import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useActiveViewId, useViewIds, useFields } from '@vikadata/widget-sdk';
+import { RadioGroup, Radio, TextInput, Modal, Message, LinkButton, Button } from '@vikadata/components';
 import styles from './setting.module.less';
-import { InformationLargeOutlined } from '@vikadata/icons';
+import { InformationLargeOutlined, ChevronRightOutlined } from '@vikadata/icons';
+import { IMapToken } from './interface/map';
+import AMapLoader from '@amap/amap-jsapi-loader';
 
 export const Setting: React.FC = () => {
   // 设置是否打开
   const [isSettingOpened] = useSettingsButton();
+  // useActiveViewId 存在在仪表盘下新建获取为空，所以需要拿到所有表的第一个
+  const defaultViewId = useActiveViewId() || useViewIds()[0];
+  const defaultFields = useFields(defaultViewId);
+  
   // 视图ID
-  const [viewId, setViewId] = useCloudStorage<string>('selectedViewId');
+  const [viewId, setViewId] = useCloudStorage<string>('selectedViewId', defaultViewId);
+  
   // 地址字段ID 以及类型
   const [addressType, setAddressType] = useCloudStorage<string | number>('addressType', 'text');
   const [addressFieldId, setAddressFieldId] = useCloudStorage<string>('address');
 
   // 名称字段ID
-  const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title');
+  const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title', defaultFields[0].fieldData.id);
 
   // 更新地图
   const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
 
   // 高德apiToken
-  const [apiToken, setApiToken] = useCloudStorage<string>('apiToken');
-  // const [securityJsCode, setSecurityJsCode] = useCloudStorage<string>('securityJsCode', '41d2e666297c21beda8897b2dfecc92f');
+  const [apiToken, setApiToken] = useState<string>('');
+  const [securityJsCode, setSecurityJsCode] = useState<string>('');
+
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+
+  const [mapToken, setToken] = useCloudStorage<IMapToken>('mapToken');
+
+  
+
+  const confirmToken = () => {
+    setToken({
+      key: apiToken,
+      security: securityJsCode
+    });
+    
+    setModalVisible(false);
+    Message.success({ content: '密钥已保存' });
+    AMapLoader.reset();
+  }
 
   return isSettingOpened ? (
     <div className={styles.settingContent}>
@@ -39,24 +63,6 @@ export const Setting: React.FC = () => {
                 onChange={option => setAddressFieldId(option.value)} 
               />
             </FormItem>
-            {/* <FormItem label="填写apiToken">
-              <TextInput
-                block
-                placeholder="请输入apiToken"
-                value={apiToken}
-                onChange={e => setApiToken(e.target.value)}
-                type="password"
-              />
-            </FormItem>
-            <FormItem label="填写securityJsCode">
-              <TextInput
-                block
-                placeholder="请输入securityJsCode"
-                value={securityJsCode}
-                onChange={e => setSecurityJsCode(e.target.value)}
-                type="password"
-              />
-            </FormItem> */}
             <FormItem label="切换地址的数据类型" help="数据类型说明">
                 <RadioGroup name="btn-group-with-default" isBtn value={addressType} block onChange={(e, value) => {
                   setAddressType(value);
@@ -72,20 +78,47 @@ export const Setting: React.FC = () => {
                 onChange={option => setTitleFieldId(option.value)} 
               />
             </FormItem>
-            {/* <h1>其他配置</h1>
-            <FormItem label="第三方 API 秘钥" help="如何获取秘钥?" link="https:www.baidu.com">
-              <TextInput
-                placeholder="请输入内容"
-                value={apiToken}
-                onChange={e => setApiToken(e.target.value)}
-              />
-            </FormItem> */}
+            <h1>其他配置</h1>
+            <label className={styles.settingLabel}>第三方API验证</label>
+            <div className={styles.settingToken} onClick={() => setModalVisible(true)}>填写私人API验证 <ChevronRightOutlined /></div>
+         
             <FormItem label="" >
               <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
             </FormItem>
           </div>
         </div>
       </div>
+      <Modal 
+        title="填写私人 API 验证" 
+        visible={modalVisible} 
+        onCancel={() => setModalVisible(false)}
+        onOk={() => confirmToken()}
+        width={360}
+      >
+        <div className={styles.modalContent}>
+            <ul>
+                <li>1. 前往 <LinkButton underline={false} href="https://lbs.amap.com/" target="_blank">高德地图</LinkButton> 注册并登录 </li>
+                <li>2. 在<LinkButton underline={false} href="https://console.amap.com/dev/key/app" target="_blank">后台</LinkButton>获取个人秘钥和 Key,并在下方输入即可</li>
+                <li>3. 详细教程请查阅 <LinkButton underline={false} href="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare" target="_blank">获取私人 API 验证</LinkButton></li>
+            </ul>
+              <FormItem label="Key">
+              <TextInput
+                placeholder="请输入内容"
+                value={apiToken}
+                onChange={e => setApiToken(e.target.value)}
+                block
+              />
+            </FormItem>
+            <FormItem label="密钥"  >
+              <TextInput
+                placeholder="请输入内容"
+                value={securityJsCode}
+                onChange={e => setSecurityJsCode(e.target.value)}
+                block
+              />
+            </FormItem>
+        </div>
+      </Modal>
     </div>
   ) : null;
 };

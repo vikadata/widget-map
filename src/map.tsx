@@ -3,7 +3,7 @@ import { Setting } from './setting';
 import { MapContent } from './components/mapcontent';
 import AMapLoader from '@amap/amap-jsapi-loader';
 // import { useMount } from 'ahooks';
-import { IPlugins } from './interface/map';
+import { IPlugins, IMapToken } from './interface/map';
 import { useCloudStorage, useMeta } from '@vikadata/widget-sdk';
 import "@amap/amap-jsapi-types";
 declare global {
@@ -34,20 +34,27 @@ export const MapComponent: React.FC = () => {
   // 配置好的插件对象集合
   const [plugins, setPlugins] = useState<IPlugins>();
   // 高德apiToken
-  const [apiToken] = useCloudStorage<string>('apiToken', '');
-  const [securityJsCode] = useCloudStorage<string>('securityJsCode', '');
-  window._AMapSecurityConfig = {
-    securityJsCode: 'e21828e25e02c281835f7b65c42fc418',
-  }
+  const [mapToken] = useCloudStorage<IMapToken>('mapToken', {
+    key: null,
+    security: null
+  });
+
+  
+  
   // 组件初始化时，加载 sdk 地图实例
   useEffect(() => {
     if(window.AMap) {
       setAMap(window.AMap);
       return;
     }
-    console.log('apiToken', apiToken);
+    console.log('AMapLoader--->', AMapLoader);
+
+    window._AMapSecurityConfig = {
+      securityJsCode: mapToken.security || 'e21828e25e02c281835f7b65c42fc418',
+    }
+    
     AMapLoader.load({
-      "key": 'e979c61a0a16f0d80286e32c5075be6a',
+      "key": mapToken.key || 'e979c61a0a16f0d80286e32c5075be6a',
       "version": "2.0",
       "plugins":[
         'AMap.Geocoder', 
@@ -65,19 +72,24 @@ export const MapComponent: React.FC = () => {
           "version": '2.0.0'  // Loca 版本，缺省 1.3.2
       },
     }).then((AMap) => {
+      setLodingtatus(false);
+      console.log('window._AMapSecurityConfig', window._AMapSecurityConfig);
       setAMap(AMap);
     }).catch(e=>{
+        
         setLodingtatus(false);
         console.log('地图加载失败原因---->', e);
     });
    
-  }, [apiToken, securityJsCode]);
+  }, [mapToken]);
 
   // 初始化地图
   useEffect(() => {
+    console.log('执行2');
     if(!AMap) {
       return;
     }
+    console.log('执行3');
     initMap(AMap);
     setLodingtatus(true);
   }, [AMap]);
@@ -87,7 +99,7 @@ export const MapComponent: React.FC = () => {
     const amap = new AMap.Map('mapContainer', {
       zoom: 4,//级别
       viewMode: '2D',//使用3D视图
-      mapStyle: 'amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605',
+      // mapStyle: 'amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605',
       jogEnable: false,
       animateEnable: false
     });

@@ -21,7 +21,7 @@ interface mapContentProps {
 }
 
 // 最大限制列
-const limitRcord = 500;
+const limitRcord = 50000;
 
 
 export const MapContent: React.FC<mapContentProps> = props => {
@@ -66,8 +66,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 默认Icon 配置
   const iconDefaultConfig = useMemo(() => {
       return lodingStatus ? {
+        type: 'image',
         image: markerIcon,
         anchor:'center',
+        // size: [64, 30],
         // imageSize: new AMap.Size(22, 22),   // 根据所设置的大小拉伸或压缩图片
       } : null;
   }, [AMap, lodingStatus]);
@@ -168,10 +170,10 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 地址处理
   async function dealAddress(simpleRecords) {
 
-    const defaultIcon = new AMap.Icon({
+    const defaultIcon = {
       ...iconDefaultConfig,
       image: markerIcon,  // Icon的图像
-    });
+    };
     let locationRecoreds;
       if(addressType === 'text') {
         
@@ -271,6 +273,16 @@ export const MapContent: React.FC<mapContentProps> = props => {
     Message.success({ content: `图标渲染完成 渲染数目${locationRecoreds.length}` });
     
     setMakerslayer(locationRecoreds);
+    const labelsLayer = new AMap.LabelsLayer({
+        zooms: [3, 20],
+        zIndex: 1000,
+        // 该层内标注是否避让
+        collision: true,
+        // 设置 allowCollision：true，可以让标注避让用户的标注
+        allowCollision: true,
+    });
+    labelsLayer.add(locationRecoreds);
+    map.add(labelsLayer);
   }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
 
@@ -320,14 +332,16 @@ export const MapContent: React.FC<mapContentProps> = props => {
     if(!record.location) {
       return;
     }
-    const marker =  new AMap.Marker({
+    const marker =  new AMap.LabelMarker({
       icon,
       //...其他Marker选项...，不包括content
       // title: record.title,
-      map: map,
-      label: { 
+      text: { 
         content: record.title,
-        direction: 'right'
+        direction: 'right',
+        fontSize: 14,
+        fillColor: '#2E2E2E',
+        fold: true
       },
       anchor: 'bottom-center',
       clickable: true,

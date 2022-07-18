@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord } from '@vikadata/widget-sdk';
 import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce } from 'ahooks';
-import { TextInput, Message, Tooltip } from '@vikadata/components';
+import { TextInput, Message, Tooltip, colorVars } from '@vikadata/components';
 import styles from './style.module.less';
 import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, TitleTemplateFilled } from '@vikadata/icons';
 
 import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
 import markerSelectedIcon from '../../static/img/markSelect.svg';
+import labelBg from '../../static/img/label_bg.svg';
 import { IPlugins, ISimpleRecords } from '../../interface/map';
 import { slice } from 'lodash';
 import "@amap/amap-jsapi-types";
@@ -58,8 +59,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 地理编码或者坐标转换之后的Records
   // const [markAddressRecords, setMarkAddressRecords] = useCloudStorage<any>('markAddressData');
   
-  const [isShowLabel, setIsShowLabel] = useState<boolean>(false);
-  
+  const [isShowLabel, setIsShowLabel] = useState<boolean>(true);
+  const [laberMarker, setLabelMarker] = useState();
   
   // 默认Icon 配置
   const iconDefaultConfig = useMemo(() => {
@@ -74,7 +75,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   const infoWindow =  useMemo(() => { 
     return lodingStatus ? new AMap.InfoWindow({
       content: '<div class="infowindowContent" >11111</div>',  //传入 dom 对象，或者 html 字符串
-      offset: [0, -12],
+      offset: [0, -22],
       isCustom: true,
       // anchor: 'middle-left'
     }) : null;
@@ -111,19 +112,22 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   // 切换Label
   useEffect(() => {
-    if(!map) {
+    if(!map || !laberMarker) {
       return;
     }
-    const label = document.getElementsByClassName('amap-marker-label');
-    const labelArr = Object.keys(label);
-    if(!isShowLabel) {
-      labelArr.forEach(item=> {
-        label[item].style.visibility = 'hidden';
-      });
+    // const label = document.getElementsByClassName('amap-marker-label');
+    // const labelArr = Object.keys(label);
+    if(!isShowLabel ) {
+      // labelArr.forEach(item=> {
+      //   label[item].style.visibility = 'hidden';
+      // });
+      map.remove(laberMarker);
     } else {
-      labelArr.forEach(item=> {
-        label[item].style.visibility = 'visible';
-      });
+      // labelArr.forEach(item=> {
+      //   label[item].style.visibility = 'visible';
+      // });
+      
+      map.add(laberMarker);
     }
   
     
@@ -360,13 +364,14 @@ export const MapContent: React.FC<mapContentProps> = props => {
         opacity: 1,
         visible: true,
     });
-
+    
     const geo = new plugins.Loca.GeoJSONSource({
         data: {
             "type": "FeatureCollection",
             "features": recordsGeo,
         },
     });
+    
     layer.setSource(geo);
     layer.setStyle({
       unit: 'px',
@@ -376,15 +381,18 @@ export const MapContent: React.FC<mapContentProps> = props => {
       rotation: 0,
     })
     loca.add(layer);
+
+  
+  
     // 拾取测试
     map.on('click', (e) => {
         const feat = layer.queryFeature(e.pixel.toArray());
         console.log('feat', feat);
         if (feat) {
-
             expandRecord({recordIds: [feat.properties.id]});
         }
     });
+
     map.on('mousemove', (e) => {
       const feat = layer.queryFeature(e.pixel.toArray());
       console.log('feat', feat);
@@ -395,6 +403,58 @@ export const MapContent: React.FC<mapContentProps> = props => {
         infoWindow.close(map);
       }
     });
+    const labelMarkers = recordsGeo.map(record => {
+      const text = {
+        // 要展示的文字内容
+        content: record?.properties.title,
+        // 文字方向，有 icon 时为围绕文字的方向，没有 icon 时，则为相对 position 的位置
+        direction: 'right',
+        // 在 direction 基础上的偏移量
+        offset: [20, 0],
+        // 文字样式
+        style: {
+            // 字体大小
+            fontSize: 14,
+            // 字体颜色
+            fillColor: '#2E2E2E',
+            fontStyle: 'normal',
+            fontFamily: 'PingFang SC',
+            fontWeight: '400',
+            padding: '5, 8',
+            // // 描边颜色
+            // strokeColor: '#fff',
+            // // 描边宽度
+            // strokeWidth: 2,
+            backgroundColor: '#FFFFFF',
+            borderColor: '#DCDFE5',
+            borderWidth: 1,
+           
+            borderRadius: 4
+        }
+      }
+     
+      return  new AMap.LabelMarker({
+          name: '标注2', // 此属性非绘制文字内容，仅最为标识使用
+          position: record?.geometry.coordinates,
+          zIndex: 16,
+          // 将第二步创建的 text 对象传给 text 属性
+          text: text,
+
+      });
+      
+    });
+    const labelsLayer = new AMap.LabelsLayer({
+        zooms: [3, 20],
+        zIndex: 120,
+        // 该层内标注是否避让
+        collision: true,
+        // 设置 allowCollision：true，可以让标注避让用户的标注
+        allowCollision: true,
+    });
+    labelsLayer.add(labelMarkers);
+    setLabelMarker(labelsLayer);
+    map.add(labelsLayer);
+
     // layer.show();
   }, [records, titleFieldID, updateMap]);
  

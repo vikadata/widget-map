@@ -133,7 +133,7 @@
   .infowindowContent {
     display: block;
     width: 225px;
-    height: 60px;
+    // height: 60px;
     background-color: var(--bgCommonHigh);
     // border: 1px solid var(--borderCommon);
     border-radius: 8px;
@@ -152,18 +152,21 @@
       z-index: 99;
     }
     h1 {
+      width: 201px;
+      // height: 20px;
       font-family: 'PingFang SC';
       font-style: normal;
       font-weight: 400;
       font-size: 14px;
       line-height: 22px;
-      text-align: center;
+      text-align: left;
       color: var(--textCommonPrimary);
-      text-overflow: ellipsis;
-      overflow: hidden;
-      white-space: nowrap;
+      // text-overflow: ellipsis;
+      // overflow: hidden;
+      white-space: break-word;
       margin: 0;
       padding: 0;
+      
     }
     p {
       color: var(--textCommonTertiary);

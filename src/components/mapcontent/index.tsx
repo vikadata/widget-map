@@ -74,7 +74,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   const infoWindow =  useMemo(() => { 
     return lodingStatus ? new AMap.InfoWindow({
       content: '<div class="infowindowContent" >11111</div>',  //传入 dom 对象，或者 html 字符串
-      offset: [0, -32],
+      offset: [0, -12],
       isCustom: true,
       // anchor: 'middle-left'
     }) : null;
@@ -334,8 +334,9 @@ export const MapContent: React.FC<mapContentProps> = props => {
         return {
           "type": "Feature",
           "properties": {
-              "name": record.title,
+              "title": record.title,
               "id": record.id,
+              "address": record.address
           },
           "geometry": {
               "type": "Point",
@@ -380,21 +381,19 @@ export const MapContent: React.FC<mapContentProps> = props => {
         const feat = layer.queryFeature(e.pixel.toArray());
         console.log('feat', feat);
         if (feat) {
-            // layer.setStyle({
-            //     unit: 'px',
-            //     iconSize: (i, feature) => {
-            //         if (feature === feat) {
-            //             return [60, 60];
-            //         }
-            //         return [40, 40];
-            //     },
-            // });
+
             expandRecord({recordIds: [feat.properties.id]});
         }
     });
-    map.on('mouseover', (e) => {
+    map.on('mousemove', (e) => {
       const feat = layer.queryFeature(e.pixel.toArray());
       console.log('feat', feat);
+      if(feat) {
+        infoWindow.setContent(`<div class="infowindowContent" ><h1>${feat.properties.title}</h1><p>${feat.properties.address}</p></div>`)
+        infoWindow.open(map, feat.coordinates);
+      } else {
+        infoWindow.close(map);
+      }
     });
     // layer.show();
   }, [records, titleFieldID, updateMap]);

@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
-import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
+import { getLocationAsync, getRcoresLocationAsync } from '../../utils/common';
 import { useDebounce } from 'ahooks';
-import { TextInput, Message, Tooltip, colorVars } from '@vikadata/components';
+import { TextInput, Message, Tooltip } from '@vikadata/components';
 import styles from './style.module.less';
 import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined } from '@vikadata/icons';
 
 import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
 import markerSelectedIcon from '../../static/img/markSelect.svg';
-import labelBg from '../../static/img/label_bg.svg';
 import { IPlugins, ISimpleRecords } from '../../interface/map';
 import { slice } from 'lodash';
 import "@amap/amap-jsapi-types";
@@ -23,6 +22,23 @@ interface mapContentProps {
 
 // 最大限制列
 const limitRcord = 50000;
+
+
+const labelStyle = {
+  // 字体大小
+  fontSize: 14,
+  // 字体颜色
+  fillColor: '#2E2E2E',
+  fontStyle: 'normal',
+  fontFamily: 'PingFang SC',
+  fontWeight: '400',
+  padding: '5, 8',
+  backgroundColor: '#FFFFFF',
+  borderColor: '#DCDFE5',
+  borderWidth: 1,
+ 
+  borderRadius: 4
+}
 
 
 export const MapContent: React.FC<mapContentProps> = props => {
@@ -49,8 +65,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   const [addressFieldId] = useCloudStorage<string>('address');
   // 名称字段ID
   const [titleFieldID] = useCloudStorage<string>('title', defaultFields[0].fieldData.id);
-  // 地址字段
-  // const addressField = useField(addressFieldId);
+ 
   // 获取表格选中信息
   const activeCell = useActiveCell();
   const activeRecord = useRecord(activeCell?.recordId);
@@ -58,27 +73,27 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   // 地图标点集合
   const [markersLayer, setMakerslayer] = useState<AMap.Marker[]>();
-  // 地理编码或者坐标转换之后的Records
-  // const [markAddressRecords, setMarkAddressRecords] = useCloudStorage<any>('markAddressData');
-  
+ 
+  // 标点label集合
   const [isShowLabel, setIsShowLabel] = useState<boolean>(true);
   const [laberMarker, setLabelMarker] = useState();
   
+  // 可视化容器
+  const [localContainer, setLocalContainer] = useState<any>();
+
   // 默认Icon 配置
   const iconDefaultConfig = useMemo(() => {
       return lodingStatus ? {
         type: 'image',
         image: markerIcon,
         anchor:'center',
-        // size: [64, 30],
-        // imageSize: new AMap.Size(22, 22),   // 根据所设置的大小拉伸或压缩图片
       } : null;
   }, [AMap, lodingStatus]);
   
   // 默认信息弹窗配置
   const infoWindow =  useMemo(() => { 
     return lodingStatus ? new AMap.InfoWindow({
-      content: '<div class="infowindowContent" >11111</div>',  //传入 dom 对象，或者 html 字符串
+      content: '<div class="infowindowContent" ></div>',  //传入 dom 对象，或者 html 字符串
       offset: [0, -22],
       isCustom: true,
       // anchor: 'middle-left'
@@ -119,22 +134,12 @@ export const MapContent: React.FC<mapContentProps> = props => {
     if(!map || !laberMarker) {
       return;
     }
-    // const label = document.getElementsByClassName('amap-marker-label');
-    // const labelArr = Object.keys(label);
+   
     if(!isShowLabel ) {
-      // labelArr.forEach(item=> {
-      //   label[item].style.visibility = 'hidden';
-      // });
       map.remove(laberMarker);
     } else {
-      // labelArr.forEach(item=> {
-      //   label[item].style.visibility = 'visible';
-      // });
-      
       map.add(laberMarker);
-    }
-  
-    
+    }  
   },[map, isShowLabel]);
 
   // 设置搜索定位功能
@@ -172,85 +177,25 @@ export const MapContent: React.FC<mapContentProps> = props => {
   };
 
   // 地址处理
-  async function dealAddress(simpleRecords) {
-
-    const defaultIcon = {
-      ...iconDefaultConfig,
-      image: markerIcon,  // Icon的图像
-    };
-    let locationRecoreds;
+  async function dealAddress(plugins, records) {
       if(addressType === 'text') {
-        
-        locationRecoreds  =  await Promise.all(simpleRecords.map(async record => {
-          
-          if(record && record.className) {
-            const recordData = record.getExtData();
-            if(recordData.isAddressUpdate) {
-              
-              map.remove(record);
-              const recordLocation = await getRcoresLocationAsync(plugins, { ...recordData, isAddressUpdate: false });
-              return creatMarker(expandRecord, recordLocation, defaultIcon);
-            } else if (recordData.isTitleUpdate){
-              
-              map.remove(record);
-              return creatMarker(expandRecord, { ...recordData, isTitleUpdate: false }, defaultIcon);
-            } else {
-              return record;
-            }
-          } else  {
-            const recordLocation = await getRcoresLocationAsync(plugins, { ...record, isAddressUpdate: false });
-            return creatMarker(expandRecord, recordLocation, defaultIcon);
-          }
-        }));
-       
+        const asyncRecords = records.map(record => getRcoresLocationAsync(plugins, record));
+        return Promise.all(asyncRecords);
       } else if(addressType === 'latlng') {
-        locationRecoreds = simpleRecords.map( record => {
-          if(record && record.className) {
-            const recordData = record.getExtData();
-            const lnglat = recordData.address ? recordData.address.split(',') : '';
-            if(recordData.isAddressUpdate) {
-              map.remove(record);
-              let location;
-              try {
-                location = lnglat && lnglat.length > 1 ? new AMap.LngLat(lnglat[0], lnglat[1]) : null;
-              } catch(e) {
-                location = null
-                // console.log(e);
-              }
-              return creatMarker(expandRecord, {
-                ...recordData,
-                location,
-                isAddressUpdate: false,
-              }, defaultIcon);
-            } else if (recordData.isTitleUpdate){
-              map.remove(record);
-              return creatMarker(expandRecord, {
-                ...recordData,
-                location,
-                isAddressUpdate: false,
-              }, defaultIcon);
-            } else {
-              return record;
-            }
+        return records.map(record => {
+          const location = record.address ? record.address.split(',') : '';
+          if(!location || location.length !== 2) {
+            return null;
           } else {
-            const lnglat = record.address ? record.address.split(',') : '';
-            let location;
-            try {
-              location = lnglat && lnglat.length > 1 ? new AMap.LngLat(lnglat[0], lnglat[1]) : null;
-            } catch(e) {
-              location = null
-              // console.log(e);
-            }
-            return creatMarker(expandRecord, {
+            return {
               ...record,
-              location,
-              isAddressUpdate: false,
-            }, defaultIcon);
+              location: [
+                  parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
+              ]
+            }
           }
-          
-        });
+        }).filter(Boolean);
       }
-      return locationRecoreds.filter(Boolean);
   }
 
 
@@ -258,16 +203,19 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   // 配置改动直接全部更新
   useAsyncEffect(async () => {
-    return;
+ 
     if(!addressType || !addressFieldId || !records || !lodingStatus) {
       return;
     }
     if(markersLayer) {
-      map.remove(markersLayer);
+      localContainer?.remove(markersLayer);
     }
 
-    const simpleRecords: ISimpleRecords[] = slice(records, 0, limitRcord)
-    .map(record => {
+    if(laberMarker) {
+      map.remove(laberMarker);
+    }
+
+    const simpleRecords: ISimpleRecords[] = records.map(record => {
       return {
         title: record.getCellValueString(titleFieldID) || '',
         address: record.getCellValueString(addressFieldId) || '',
@@ -276,79 +224,29 @@ export const MapContent: React.FC<mapContentProps> = props => {
         isTitleUpdate: true,
       }
     });
+
     map.setZoom(4);
-    const locationRecoreds = await dealAddress(simpleRecords);
-    Message.success({ content: `图标渲染完成 渲染数目${locationRecoreds.length}` });
+
+    //经纬度处理
+    const locationRecords = await dealAddress(plugins, simpleRecords);
+
+    console.log('locationRecords', locationRecords);
+
+    const recordsGeo = formateGeo(locationRecords);
+
+    const [local, iconLayer] = creatIconLayer(plugins, recordsGeo);
+    setLocalContainer(local);
+    setMakerslayer(iconLayer);
+    Message.success({ content: `图标渲染完成 渲染数目${locationRecords.length}` });
+    const labelLayer = creatLabelLayer(recordsGeo);
+    setLabelMarker(labelLayer);
     
-    setMakerslayer(locationRecoreds);
-    const labelsLayer = new AMap.LabelsLayer({
-        zooms: [3, 20],
-        zIndex: 1000,
-        // 该层内标注是否避让
-        collision: true,
-        // 设置 allowCollision：true，可以让标注避让用户的标注
-        allowCollision: true,
-    });
-    labelsLayer.add(locationRecoreds);
-    map.add(labelsLayer);
+
   }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
 
-  // records改动地址名称字段处理存入markersLayer 增删减更新
-  useAsyncEffect(async function getAddressList() {
-    return;
-    if(!addressType || !addressFieldId || !records || !lodingStatus) {
-      return;
-    }
-    // 点击更新地图之后根据如果是地址字段去对比cloudStorage储存的信息
-    // 获取表格所有地址以及用户选择的名称
-   
-    const simpleRecords: ISimpleRecords[] = slice(records, 0, limitRcord)
-    .map(record => {
-      return {
-        title: record.getCellValueString(titleFieldID) || '',
-        address: record.getCellValueString(addressFieldId) || '',
-        id: record.id,
-        isAddressUpdate: false,
-        isTitleUpdate: false,
-      }
-    });
-    if(!markersLayer || markersLayer.length === 0) { // 如果是第一次设置地图
-      map.setZoom(4);
-      const locationRecoreds = await dealAddress(simpleRecords);
-      Message.success({ content: `图标渲染完成 渲染数目${locationRecoreds.length}` });
-      setMakerslayer(locationRecoreds);
-    } else {
-      
-      const newAddressRecord = updateMardkAddressRecord(simpleRecords, markersLayer);
-      
-      const dealAddressRecordsCopy = await dealAddress(newAddressRecord);
-      setMakerslayer(dealAddressRecordsCopy);
-    }
-  },[records]);
-  
-  useEffect(() => {
-    if(!records || !plugins || !map) {
-      return;
-    }
-    const recordsSlice: ISimpleRecords[] = slice(records, 0, 20000)
-    .map(record => {
-      return {
-        title: record.getCellValueString(titleFieldID) || '',
-        address: record.getCellValueString(addressFieldId) || '',
-        id: record.id,
-        isAddressUpdate: true,
-        isTitleUpdate: true,
-      }
-    });
-    // console.log('recordsSlice--->', recordsSlice);
-
-    const recordsGeo = recordsSlice.map(record => {
-      const location = record.address ? record.address.split(',') : '';
-      if(!location || location.length !== 2) {
-       
-        return null;
-      } else {
+  function formateGeo(records) {
+    return records.map(record => { 
         return {
           "type": "Feature",
           "properties": {
@@ -358,58 +256,56 @@ export const MapContent: React.FC<mapContentProps> = props => {
           },
           "geometry": {
               "type": "Point",
-              "coordinates": [
-                parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
-            ]
+              "coordinates": record.location
           }
         }
-      }
-    }).filter(Boolean); 
+    }).filter(Boolean);
+  }
 
-    console.log('recordsGeo-->', recordsGeo);
-
+  // 创建icon标点图层
+  function creatIconLayer(plugins, geoRecords) {
+    
     const loca = new plugins.Loca.Container({
-        map,
+      map,
     });
-    // console.log('loca---->', loca);
 
-    const layer = new plugins.Loca.IconLayer({
-        zIndex: 99,
-        opacity: 1,
-        visible: true,
+    const iconLayer = new plugins.Loca.IconLayer({
+      zIndex: 99,
+      opacity: 1,
+      visible: true,
     });
     
     const geo = new plugins.Loca.GeoJSONSource({
-        data: {
-            "type": "FeatureCollection",
-            "features": recordsGeo,
-        },
+      data: {
+          "type": "FeatureCollection",
+          "features": geoRecords,
+      },
     });
     
-    layer.setSource(geo);
-    layer.setStyle({
+    iconLayer.setSource(geo);
+
+    iconLayer.setStyle({
       unit: 'px',
-      icon: 'https://s1.vika.cn/space/2022/06/16/10106551d68d43699bbad58527e357da?attname=mark.svg',
+      icon: markerIcon,
       iconSize: [30,30],
-      // offset: [0, -40],
       rotation: 0,
-    })
-    loca.add(layer);
+    });
+
+    loca.add(iconLayer);
 
   
-  
-    // 拾取测试
+    //点击展开弹窗
     map.on('click', (e) => {
-        const feat = layer.queryFeature(e.pixel.toArray());
+        const feat = iconLayer.queryFeature(e.pixel.toArray());
         console.log('feat', feat);
         if (feat) {
             expandRecord({recordIds: [feat.properties.id]});
         }
     });
 
+    // 显示信息弹窗
     map.on('mousemove', (e) => {
-      const feat = layer.queryFeature(e.pixel.toArray());
-      console.log('feat', feat);
+      const feat = iconLayer.queryFeature(e.pixel.toArray());
       if(feat) {
         infoWindow.setContent(`<div class="infowindowContent" ><h1>${feat.properties.title}</h1><p>${feat.properties.address}</p></div>`)
         infoWindow.open(map, feat.coordinates);
@@ -417,8 +313,16 @@ export const MapContent: React.FC<mapContentProps> = props => {
         infoWindow.close(map);
       }
     });
-    const labelMarkers = recordsGeo.map(record => {
-      const text = {
+
+   
+
+    return [loca, iconLayer];
+  }
+  
+  function creatLabelLayer(geoRecords) {
+    // 标点的label
+    const labelMarkers = geoRecords.map(record => {
+     const text = {
         // 要展示的文字内容
         content: record?.properties.title,
         // 文字方向，有 icon 时为围绕文字的方向，没有 icon 时，则为相对 position 的位置
@@ -426,37 +330,19 @@ export const MapContent: React.FC<mapContentProps> = props => {
         // 在 direction 基础上的偏移量
         offset: [20, 0],
         // 文字样式
-        style: {
-            // 字体大小
-            fontSize: 14,
-            // 字体颜色
-            fillColor: '#2E2E2E',
-            fontStyle: 'normal',
-            fontFamily: 'PingFang SC',
-            fontWeight: '400',
-            padding: '5, 8',
-            // // 描边颜色
-            // strokeColor: '#fff',
-            // // 描边宽度
-            // strokeWidth: 2,
-            backgroundColor: '#FFFFFF',
-            borderColor: '#DCDFE5',
-            borderWidth: 1,
-           
-            borderRadius: 4
-        }
+        style: labelStyle
       }
-     
+
       return  new AMap.LabelMarker({
-          name: '标注2', // 此属性非绘制文字内容，仅最为标识使用
+          name: 'Label', // 此属性非绘制文字内容，仅最为标识使用
           position: record?.geometry.coordinates,
           zIndex: 16,
-          // 将第二步创建的 text 对象传给 text 属性
           text: text,
 
       });
       
     });
+
     const labelsLayer = new AMap.LabelsLayer({
         zooms: [3, 20],
         zIndex: 120,
@@ -466,11 +352,9 @@ export const MapContent: React.FC<mapContentProps> = props => {
         allowCollision: true,
     });
     labelsLayer.add(labelMarkers);
-    setLabelMarker(labelsLayer);
     map.add(labelsLayer);
-
-    // layer.show();
-  }, [records, titleFieldID, updateMap]);
+    return labelsLayer;
+  }
  
   /* 创建标记点 
   record: 标点信息
@@ -520,8 +404,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
     return marker;
   }
 
-  function backLocation() {
-    if(plugins)
+  function backLocation(plugins) {
     plugins.citySearch.getLocalCity(function (status, result) {
       if (status === 'complete' && result.info === 'OK') {
         // 查询成功，result即为当前所在城市信息

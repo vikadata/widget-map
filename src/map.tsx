@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Setting } from './setting';
 import { MapContent } from './components/mapcontent';
 import AMapLoader from '@amap/amap-jsapi-loader';
-// import { useMount } from 'ahooks';
 import { IPlugins, IMapToken } from './interface/map';
 import { useCloudStorage, useMeta } from '@vikadata/widget-sdk';
 import "@amap/amap-jsapi-types";
+
 declare global {
   interface Window { 
     AMap: any, // 地图API

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useActiveViewId, useViewIds, useFields } from '@vikadata/widget-sdk';
-import { RadioGroup, Radio, TextInput, Modal, Message, LinkButton, Button } from '@vikadata/components';
+import { RadioGroup, Radio, TextInput, Modal, Message, LinkButton } from '@vikadata/components';
 import styles from './setting.module.less';
 import { InformationLargeOutlined, ChevronRightOutlined } from '@vikadata/icons';
 import { IMapToken } from './interface/map';
@@ -22,9 +22,6 @@ export const Setting: React.FC = () => {
 
   // 名称字段ID
   const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title', defaultFields[0].fieldData.id);
-
-  // 更新地图
-  const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
 
   // 高德apiToken
   const [apiToken, setApiToken] = useState<string>('');
@@ -81,10 +78,6 @@ export const Setting: React.FC = () => {
             <h1>其他配置</h1>
             <label className={styles.settingLabel}>第三方API验证</label>
             <div className={styles.settingToken} onClick={() => setModalVisible(true)}>填写私人API验证 <ChevronRightOutlined /></div>
-         
-            <FormItem label="" >
-              <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
-            </FormItem>
           </div>
         </div>
       </div>

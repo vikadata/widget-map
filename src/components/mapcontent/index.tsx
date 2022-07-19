@@ -10,7 +10,6 @@ import { useAsyncEffect } from '../../utils/hooks';
 import markerIcon from '../../static/img/mark.svg';
 import markerSelectedIcon from '../../static/img/markSelect.svg';
 import { IPlugins, ISimpleRecords } from '../../interface/map';
-import { slice } from 'lodash';
 import "@amap/amap-jsapi-types";
 
 interface mapContentProps {
@@ -19,9 +18,6 @@ interface mapContentProps {
   map: any, // 地图实例
   plugins: IPlugins | undefined
 }
-
-// 最大限制列
-const limitRcord = 50000;
 
 
 const labelStyle = {
@@ -36,7 +32,6 @@ const labelStyle = {
   backgroundColor: '#FFFFFF',
   borderColor: '#DCDFE5',
   borderWidth: 1,
- 
   borderRadius: 4
 }
 
@@ -94,7 +89,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   const infoWindow =  useMemo(() => { 
     return lodingStatus ? new AMap.InfoWindow({
       content: '<div class="infowindowContent" ></div>',  //传入 dom 对象，或者 html 字符串
-      offset: [0, -22],
+      offset: [0, -32],
       isCustom: true,
       // anchor: 'middle-left'
     }) : null;
@@ -177,25 +172,26 @@ export const MapContent: React.FC<mapContentProps> = props => {
   };
 
   // 地址处理
-  async function dealAddress(plugins, records) {
-      if(addressType === 'text') {
-        const asyncRecords = records.map(record => getRcoresLocationAsync(plugins, record));
-        return Promise.all(asyncRecords);
-      } else if(addressType === 'latlng') {
-        return records.map(record => {
-          const location = record.address ? record.address.split(',') : '';
-          if(!location || location.length !== 2) {
-            return null;
-          } else {
-            return {
-              ...record,
-              location: [
-                  parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
-              ]
-            }
+  async function dealAddress(plugins: IPlugins, records: ISimpleRecords[]) {
+    if(addressType === 'text') {
+      const asyncRecords = records.map(record => getRcoresLocationAsync(plugins, record));
+      return Promise.all(asyncRecords);
+    } else if(addressType === 'latlng') {
+      return records.map(record => {
+        const location = record.address ? record.address.split(',') : '';
+        if(!location || location.length !== 2) {
+          return null;
+        } else {
+          return {
+            ...record,
+            location: [
+                parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
+            ]
           }
-        }).filter(Boolean);
-      }
+        }
+      }).filter(Boolean);
+    }
+    return [];
   }
 
 
@@ -204,7 +200,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 配置改动直接全部更新
   useAsyncEffect(async () => {
  
-    if(!addressType || !addressFieldId || !records || !lodingStatus) {
+    if(!addressType || !addressFieldId || !records || !lodingStatus || !plugins) {
       return;
     }
     if(markersLayer) {
@@ -228,16 +224,21 @@ export const MapContent: React.FC<mapContentProps> = props => {
     map.setZoom(4);
 
     //经纬度处理
-    const locationRecords = await dealAddress(plugins, simpleRecords);
+    const locationRecords  = await dealAddress(plugins, simpleRecords);
 
     console.log('locationRecords', locationRecords);
 
     const recordsGeo = formateGeo(locationRecords);
 
-    const [local, iconLayer] = creatIconLayer(plugins, recordsGeo);
-    setLocalContainer(local);
+    const iconLayer = creatIconLayer(plugins, recordsGeo);
+    const loca = new plugins.Loca.Container({
+      map,
+    });
+    loca.add(iconLayer);
+    setLocalContainer(loca);
     setMakerslayer(iconLayer);
-    Message.success({ content: `图标渲染完成 渲染数目${locationRecords.length}` });
+  
+    // Message.success({ content: `图标渲染完成 渲染数目${locationRecords.length}` });
     const labelLayer = creatLabelLayer(recordsGeo);
     setLabelMarker(labelLayer);
     
@@ -245,8 +246,11 @@ export const MapContent: React.FC<mapContentProps> = props => {
   }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
 
-  function formateGeo(records) {
-    return records.map(record => { 
+  function formateGeo(locationRecords) {
+    return locationRecords.map(record => {
+        if(!record.location) {
+          return null
+        }
         return {
           "type": "Feature",
           "properties": {
@@ -265,12 +269,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 创建icon标点图层
   function creatIconLayer(plugins, geoRecords) {
     
-    const loca = new plugins.Loca.Container({
-      map,
-    });
-
     const iconLayer = new plugins.Loca.IconLayer({
-      zIndex: 99,
+      zIndex: 10,
       opacity: 1,
       visible: true,
     });
@@ -289,9 +289,8 @@ export const MapContent: React.FC<mapContentProps> = props => {
       icon: markerIcon,
       iconSize: [30,30],
       rotation: 0,
+      offset: [0,15],
     });
-
-    loca.add(iconLayer);
 
   
     //点击展开弹窗
@@ -314,21 +313,22 @@ export const MapContent: React.FC<mapContentProps> = props => {
       }
     });
 
-   
-
-    return [loca, iconLayer];
+    return iconLayer;
   }
   
   function creatLabelLayer(geoRecords) {
+   
     // 标点的label
     const labelMarkers = geoRecords.map(record => {
-     const text = {
+      const title = record?.properties.title;
+      console.log('title--->', title);
+      const text = {
         // 要展示的文字内容
-        content: record?.properties.title,
+        content: title.length < 9 ? title : title.substring(0,8) + '...',
         // 文字方向，有 icon 时为围绕文字的方向，没有 icon 时，则为相对 position 的位置
         direction: 'right',
         // 在 direction 基础上的偏移量
-        offset: [20, 0],
+        offset: [20, -15],
         // 文字样式
         style: labelStyle
       }
@@ -336,7 +336,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
       return  new AMap.LabelMarker({
           name: 'Label', // 此属性非绘制文字内容，仅最为标识使用
           position: record?.geometry.coordinates,
-          zIndex: 16,
+          zIndex: 10,
           text: text,
 
       });
@@ -345,7 +345,7 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
     const labelsLayer = new AMap.LabelsLayer({
         zooms: [3, 20],
-        zIndex: 120,
+        zIndex: 10,
         // 该层内标注是否避让
         collision: true,
         // 设置 allowCollision：true，可以让标注避让用户的标注
@@ -441,9 +441,11 @@ export const MapContent: React.FC<mapContentProps> = props => {
                 <EyeCloseOutlined size={16} className={styles.tooBarIcon} onClick={() => setIsShowLabel(!isShowLabel)} /> }
             </div>
           </Tooltip>
+          <Tooltip content='回到当前城市' placement='left'>
           <div className={styles.backPosition} onClick={backLocation} >
             <PositionOutlined size={16} className={styles.tooBarIcon} />
           </div>
+          </Tooltip>
           <div className={styles.toolBar}>
             <ZoomInOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />
             <ZoomOutOutlined size={16} className={styles.tooBarIcon} onClick={() => { map.zoomOut() }} />

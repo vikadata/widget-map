@@ -35,7 +35,6 @@ export const getRcoresLocationAsync = (plugins: IPlugins | undefined, records: I
   }
 
   return new Promise((resolve, reject) => {
-   
     if(address &&  address !== '') {
       plugins.geocoder.getLocation(address, function(status, result) {
         if (status === 'complete' && result.info === 'OK') {

@@ -105,22 +105,10 @@ export const MapComponent: React.FC = () => {
     });
     setMap(amap);
 
-    // 添加工具条
-    // amap.addControl(new AMap.ToolBar());
+
     window.amap = amap;
 
 
-    // 设置路径导航插件
-    // const transfer = new AMap.Transfer({
-    //   // city 指定进行编码查询的城市，支持传入城市名、adcode 和 citycode
-    //   city: '全国',
-    //   map: amap,
-    //   hideMarkers: true,
-    //   extensions: 'all',
-    //   policy: 'LEAST_TIME',
-    //   panel: 'commute'
-    // });
-   
 
     // 添加地址编码插件
     const geocoder = new AMap.Geocoder({

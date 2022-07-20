@@ -52,7 +52,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   const [iconLayer, setIconlayer] = useState<AMap.Marker[]>();
  
   // 标点label图层
-  const [isShowLabel, setIsShowLabel] = useState<boolean>(true);
+  const [isShowLabel, setIsShowLabel] = useState<boolean>(false);
   const labelLayer = useRef();
 
   // 可视化容器
@@ -173,7 +173,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     } else if(addressType === 'latlng') {
       return records.map(record => {
         const location = record.address ? record.address.split(',') : '';
-        if(!location || location.length !== 2) {
+        if(!location || location.length !== 2 || isNaN(parseFloat(location[0])) ||  isNaN(parseFloat(location[0]))) {
           return null;
         } else {
           return {
@@ -248,7 +248,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
    Message.success({ content: `图标正在渲染中...`, messageKey: "loadingMark", duration: 0 });
     if(addressType === 'text' && textLocationCache.length > 0) {
       const newRecords = updateMardkAddressRecord(simpleRecords, textLocationCache);
-      console.log('newRecords--->', newRecords);
+    
       locationRecords  = await dealAddress(plugins, newRecords);
       setTextLocationCache(locationRecords);
     } else {
@@ -256,9 +256,9 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.setZoom(4);
       
       locationRecords  = await dealAddress(plugins, simpleRecords);
-      setTextLocationCache(locationRecords);
+      // setTextLocationCache(locationRecords);
     }
-    console.log('locationRecords---->', locationRecords);
+    
     const recordsGeo = formateGeo(locationRecords);
     
     const newIconLayer = creatIconLayer(plugins, recordsGeo);

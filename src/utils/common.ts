@@ -102,7 +102,7 @@ export const creatTransfer = (plugins: IPlugins | undefined,pointA, pointB) => {
 // 增量更新 markAddressRecord
 export const updateMardkAddressRecord = (simpleRecords, markersLayer) => {
   const markAddressRecordsCopy = [...markersLayer];
-      // console.log('simpleRecords----->', simpleRecords);
+      console.log('simpleRecords----->', simpleRecords, markersLayer);
       let newRecordIndex : number[] = [];
       let newRecordIsAdd : boolean[] = [];
      

@@ -83,15 +83,8 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   
   
   
-  const canvas = document.createElement('canvas');
-  canvas.id = 'labelCanvas';
-  const customLabelLayer = useMemo( () => {
-    return lodingStatus ? new AMap.CustomLayer(canvas, {
-      zooms: [3, 20],
-      zIndex: 12,
-    }) : null;
-  }, [AMap, lodingStatus]);
   
+  const canvas = document.createElement('canvas');
   
 
   // 根据选中信息设置中心坐标
@@ -126,10 +119,8 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     }
     
     if(!isShowLabel) {
-     
       labelLayer.current.setOpacity(0);
     } else {
-     
       labelLayer.current.setOpacity(1);
     }  
   },[map, isShowLabel]);
@@ -233,11 +224,12 @@ export const MapContent: React.FC<IMapContentProps> = props => {
 
     if(labelLayer.current) {
       console.log('labelLayer---->', labelLayer);
-      // map.remove(customLabelLayer);
+      labelLayer.current.destroy();
+      map.remove(labelLayer.current);
       // canvas.width = 0;
       // canvas.height = 0;
       // document.removeChild(canvas);
-      labelLayer.current.setOpacity(0);
+      
     } 
 
     const simpleRecords: ISimpleRecords[] = records.map(record => {
@@ -253,6 +245,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     
     // 对比更新文本缓存
     let locationRecords;
+   Message.success({ content: `图标正在渲染中...`, messageKey: "loadingMark", duration: 0 });
     if(addressType === 'text' && textLocationCache.length > 0) {
       const newRecords = updateMardkAddressRecord(simpleRecords, textLocationCache);
       console.log('newRecords--->', newRecords);
@@ -261,12 +254,13 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     } else {
       //经纬度处理
       map.setZoom(4);
-      Message.success({ content: `图标正在渲染中...` });
+      
       locationRecords  = await dealAddress(plugins, simpleRecords);
       setTextLocationCache(locationRecords);
     }
+    console.log('locationRecords---->', locationRecords);
     const recordsGeo = formateGeo(locationRecords);
-
+    
     const newIconLayer = creatIconLayer(plugins, recordsGeo);
     const loca = new plugins.Loca.Container({
       map,
@@ -274,8 +268,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     loca.add(newIconLayer);
     setLocalContainer(loca);
     setIconlayer(newIconLayer);
-  
-    // Message.success({ content: `图标渲染完成 渲染数目${locationRecords.length}` });
+    Message.success({ content: `图标渲染完成 渲染数目${recordsGeo.length}`, messageKey: "loadingMark", duration: 3 });
     const newLabelLayer = creatLabelLayer(locationRecords);
     
     labelLayer.current = newLabelLayer;
@@ -308,7 +301,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   function creatIconLayer(plugins, geoRecords) {
     
     const iconLayer = new plugins.Loca.IconLayer({
-      zIndex: 10,
+      zIndex: 50,
       opacity: 1,
       visible: true,
     });
@@ -334,7 +327,6 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     //点击展开弹窗
     map.on('click', (e) => {
         const feat = iconLayer.queryFeature(e.pixel.toArray());
-        console.log('feat', feat);
         if (feat) {
             expandRecord({recordIds: [feat.properties.id]});
         }
@@ -355,10 +347,16 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   }
   
   function creatLabelLayer(locationRecords) {
-
+    
+    canvas.id = 'labelCanvas';
+    const customLabelLayer = new AMap.CustomLayer(canvas, {
+      zooms: [3, 20],
+      zIndex: 12,
+    });
     
 
 		const onRender = function(){
+      
         // customLabelLayer.hide();
 		    const retina = AMap.Browser.retina;
         const size = map.getSize();//resize

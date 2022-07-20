@@ -106,7 +106,6 @@ export const updateMardkAddressRecord = (simpleRecords, markersLayer) => {
       let newRecordIsAdd : boolean[] = [];
      
       markAddressRecordsCopy.forEach((mark, index, arr ) => {
-        // const markInfo =  mark.getExtData();
         let isExist = false;
         simpleRecords.forEach((record, recordIndex)=> {
             if(mark.id === record.id ) {
@@ -136,22 +135,6 @@ export const updateMardkAddressRecord = (simpleRecords, markersLayer) => {
                   isAddressUpdate: true,
                 };
               }
-
-              if(mark.title === record.title) {
-                // 如果没有变更
-                arr[index] = {
-                  ...arr[index],
-                  isTitleUpdate: false,
-                };
-              } else {
-                // 如果变更了
-                arr[index] = {
-                  ...arr[index],
-                  title: record.title,
-                  isTitleUpdate: true,
-                };
-              }
-
             } else {
                 if(!newRecordIndex.includes(recordIndex)) {
                   newRecordIndex.push(recordIndex);

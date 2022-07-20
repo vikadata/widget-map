@@ -188,29 +188,6 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     return [];
   }
 
-  // records
-
-  //
-  useAsyncEffect(async () => {
-    if(!records) {
-      return;
-    }
-      
-    const simpleRecords: ISimpleRecords[] = records.map(record => {
-      return {
-        title: record.getCellValueString(titleFieldID) || '',
-        address: record.getCellValueString(addressFieldId) || '',
-        id: record.id,
-        isAddressUpdate: true,
-        isTitleUpdate: true,
-      }
-    });
-
-   
-
-  }, [records]);
-
-
   // 配置改动直接全部更新
   useAsyncEffect(async () => {
  
@@ -223,13 +200,8 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     }
 
     if(labelLayer.current) {
-      console.log('labelLayer---->', labelLayer);
       labelLayer.current.destroy();
       map.remove(labelLayer.current);
-      // canvas.width = 0;
-      // canvas.height = 0;
-      // document.removeChild(canvas);
-      
     } 
 
     const simpleRecords: ISimpleRecords[] = records.map(record => {
@@ -237,30 +209,30 @@ export const MapContent: React.FC<IMapContentProps> = props => {
         title: record.getCellValueString(titleFieldID) || '',
         address: record.getCellValueString(addressFieldId) || '',
         id: record.id,
-        isAddressUpdate: true,
-        isTitleUpdate: true,
+        isAddressUpdate: true
       }
     });
 
     
+
     // 对比更新文本缓存
     let locationRecords;
-   Message.success({ content: `图标正在渲染中...`, messageKey: "loadingMark", duration: 0 });
-    if(addressType === 'text' && textLocationCache.length > 0) {
-      const newRecords = updateMardkAddressRecord(simpleRecords, textLocationCache);
-    
-      locationRecords  = await dealAddress(plugins, newRecords);
-      setTextLocationCache(locationRecords);
-    } else {
-      //经纬度处理
-      map.setZoom(4);
-      
-      locationRecords  = await dealAddress(plugins, simpleRecords);
-      // setTextLocationCache(locationRecords);
-    }
-    
+    Message.success({ content: `图标正在渲染中...`, messageKey: "loadingMark", duration: 0 });
+      if(addressType === 'text' ) {
+        if(textLocationCache.length > 0) {
+          const newRecords = updateMardkAddressRecord(simpleRecords, textLocationCache);
+          locationRecords  = await dealAddress(plugins, newRecords);
+          setTextLocationCache(locationRecords);
+        } else {
+          locationRecords  = await dealAddress(plugins, simpleRecords);
+          setTextLocationCache(locationRecords);
+        }
+      } else {
+        //经纬度处理
+        map.setZoom(4);
+        locationRecords  = await dealAddress(plugins, simpleRecords);
+      }
     const recordsGeo = formateGeo(locationRecords);
-    
     const newIconLayer = creatIconLayer(plugins, recordsGeo);
     const loca = new plugins.Loca.Container({
       map,

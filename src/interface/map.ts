@@ -14,7 +14,6 @@ export interface ISimpleRecords {
   title: string;
   location?: string[];
   isAddressUpdate?: boolean;
-  isTitleUpdate?: boolean;
 }
 
 export interface IMapToken {

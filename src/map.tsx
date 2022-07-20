@@ -47,12 +47,13 @@ export const MapComponent: React.FC = () => {
       setAMap(window.AMap);
       return;
     }
-    console.log('AMapLoader--->', AMapLoader);
 
     window._AMapSecurityConfig = {
       securityJsCode: mapToken.security || 'e21828e25e02c281835f7b65c42fc418',
     }
     
+    window.forceWebGL = true;
+
     AMapLoader.load({
       "key": mapToken.key || 'e979c61a0a16f0d80286e32c5075be6a',
       "version": "2.0",
@@ -85,11 +86,9 @@ export const MapComponent: React.FC = () => {
 
   // 初始化地图
   useEffect(() => {
-    console.log('执行2');
     if(!AMap) {
       return;
     }
-    console.log('执行3');
     initMap(AMap);
     setLodingtatus(true);
   }, [AMap]);

@@ -107,10 +107,10 @@ export const updateMardkAddressRecord = (simpleRecords, markersLayer) => {
       let newRecordIsAdd : boolean[] = [];
      
       markAddressRecordsCopy.forEach((mark, index, arr ) => {
-        const markInfo =  mark.getExtData();
+        // const markInfo =  mark.getExtData();
         let isExist = false;
         simpleRecords.forEach((record, recordIndex)=> {
-            if(markInfo.id === record.id ) {
+            if(mark.id === record.id ) {
               // 已经出现了不用删除不用新增
               isExist = true;
               const newIndex = newRecordIndex.indexOf(recordIndex);
@@ -122,35 +122,35 @@ export const updateMardkAddressRecord = (simpleRecords, markersLayer) => {
               }
 
               // 如果ID相等 检查地址是否变更
-              if(markInfo.address === record.address) {
+              if(mark.address === record.address) {
                 // 如果没有变更
-                arr[index].setExtData({
-                  ...markInfo,
+                arr[index] = {
+                  ...mark,
                   isAddressUpdate: false,
-                });
+                };
               } else {
                 console.log('地址发生了变更');
                 // 如果变更了
-                arr[index].setExtData({
-                  ...markInfo,
+                arr[index] = {
+                  ...mark,
                   address: record.address,
                   isAddressUpdate: true,
-                });
+                };
               }
 
-              if(markInfo.title === record.title) {
+              if(mark.title === record.title) {
                 // 如果没有变更
-                arr[index].setExtData({
-                  ...arr[index].getExtData(),
+                arr[index] = {
+                  ...arr[index],
                   isTitleUpdate: false,
-                });
+                };
               } else {
                 // 如果变更了
-                arr[index].setExtData({
-                  ...arr[index].getExtData(),
+                arr[index] = {
+                  ...arr[index],
                   title: record.title,
                   isTitleUpdate: true,
-                });
+                };
               }
 
             } else {

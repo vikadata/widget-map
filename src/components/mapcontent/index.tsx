@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Children } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
-import { getLocationAsync, getRcoresLocationAsync } from '../../utils/common';
+import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce } from 'ahooks';
 import { TextInput, Message, Tooltip } from '@vikadata/components';
 import styles from './style.module.less';
@@ -12,31 +12,14 @@ import markerSelectedIcon from '../../static/img/markSelect.svg';
 import { IPlugins, ISimpleRecords } from '../../interface/map';
 import "@amap/amap-jsapi-types";
 
-interface mapContentProps {
+interface IMapContentProps {
   lodingStatus: boolean,
   AMap: any,
   map: any, // 地图实例
   plugins: IPlugins | undefined
 }
 
-
-const labelStyle = {
-  // 字体大小
-  fontSize: 14,
-  // 字体颜色
-  fillColor: '#2E2E2E',
-  fontStyle: 'normal',
-  fontFamily: 'PingFang SC',
-  fontWeight: '400',
-  padding: '5, 8',
-  backgroundColor: '#FFFFFF',
-  borderColor: '#DCDFE5',
-  borderWidth: 1,
-  borderRadius: 4
-}
-
-
-export const MapContent: React.FC<mapContentProps> = props => {
+export const MapContent: React.FC<IMapContentProps> = props => {
 
   const { lodingStatus, map, AMap, plugins} = props;
   // useActiveViewId 存在在仪表盘下新建获取为空，所以需要拿到所有表的第一个
@@ -64,17 +47,20 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 获取表格选中信息
   const activeCell = useActiveCell();
   const activeRecord = useRecord(activeCell?.recordId);
-  const [updateMap] = useCloudStorage<boolean>('updateMap');
-
-  // 地图标点集合
-  const [markersLayer, setMakerslayer] = useState<AMap.Marker[]>();
- 
-  // 标点label集合
-  const [isShowLabel, setIsShowLabel] = useState<boolean>(true);
-  const [laberMarker, setLabelMarker] = useState();
   
+  // 地图标点集合
+  const [iconLayer, setIconlayer] = useState<AMap.Marker[]>();
+ 
+  // 标点label图层
+  const [isShowLabel, setIsShowLabel] = useState<boolean>(true);
+  const labelLayer = useRef();
+
   // 可视化容器
   const [localContainer, setLocalContainer] = useState<any>();
+
+  const [textLocationCache, setTextLocationCache ] = useCloudStorage<ISimpleRecords[]>('textLocationCache', []);
+  
+
 
   // 默认Icon 配置
   const iconDefaultConfig = useMemo(() => {
@@ -94,8 +80,17 @@ export const MapContent: React.FC<mapContentProps> = props => {
       // anchor: 'middle-left'
     }) : null;
   }, [AMap, lodingStatus]);
-
   
+  
+  
+  const canvas = document.createElement('canvas');
+  canvas.id = 'labelCanvas';
+  const customLabelLayer = useMemo( () => {
+    return lodingStatus ? new AMap.CustomLayer(canvas, {
+      zooms: [3, 20],
+      zIndex: 12,
+    }) : null;
+  }, [AMap, lodingStatus]);
   
   
 
@@ -126,14 +121,16 @@ export const MapContent: React.FC<mapContentProps> = props => {
 
   // 切换Label
   useEffect(() => {
-    if(!map || !laberMarker) {
+    if(!map || !labelLayer.current) {
       return;
     }
-   
-    if(!isShowLabel ) {
-      map.remove(laberMarker);
+    
+    if(!isShowLabel) {
+     
+      labelLayer.current.setOpacity(0);
     } else {
-      map.add(laberMarker);
+     
+      labelLayer.current.setOpacity(1);
     }  
   },[map, isShowLabel]);
 
@@ -174,7 +171,13 @@ export const MapContent: React.FC<mapContentProps> = props => {
   // 地址处理
   async function dealAddress(plugins: IPlugins, records: ISimpleRecords[]) {
     if(addressType === 'text') {
-      const asyncRecords = records.map(record => getRcoresLocationAsync(plugins, record));
+      const asyncRecords = records.map(record => {
+        if(record.isAddressUpdate) {
+          return getRcoresLocationAsync(plugins, record);
+        } else {
+          return record
+        }
+      });
       return Promise.all(asyncRecords);
     } else if(addressType === 'latlng') {
       return records.map(record => {
@@ -194,7 +197,27 @@ export const MapContent: React.FC<mapContentProps> = props => {
     return [];
   }
 
+  // records
 
+  //
+  useAsyncEffect(async () => {
+    if(!records) {
+      return;
+    }
+      
+    const simpleRecords: ISimpleRecords[] = records.map(record => {
+      return {
+        title: record.getCellValueString(titleFieldID) || '',
+        address: record.getCellValueString(addressFieldId) || '',
+        id: record.id,
+        isAddressUpdate: true,
+        isTitleUpdate: true,
+      }
+    });
+
+   
+
+  }, [records]);
 
 
   // 配置改动直接全部更新
@@ -203,13 +226,19 @@ export const MapContent: React.FC<mapContentProps> = props => {
     if(!addressType || !addressFieldId || !records || !lodingStatus || !plugins) {
       return;
     }
-    if(markersLayer) {
-      localContainer?.remove(markersLayer);
+    if(iconLayer) {
+      localContainer?.remove(iconLayer);
+      map.remove(localContainer);
     }
 
-    if(laberMarker) {
-      map.remove(laberMarker);
-    }
+    if(labelLayer.current) {
+      console.log('labelLayer---->', labelLayer);
+      // map.remove(customLabelLayer);
+      // canvas.width = 0;
+      // canvas.height = 0;
+      // document.removeChild(canvas);
+      labelLayer.current.setOpacity(0);
+    } 
 
     const simpleRecords: ISimpleRecords[] = records.map(record => {
       return {
@@ -221,29 +250,38 @@ export const MapContent: React.FC<mapContentProps> = props => {
       }
     });
 
-    map.setZoom(4);
-
-    //经纬度处理
-    const locationRecords  = await dealAddress(plugins, simpleRecords);
-
-    console.log('locationRecords', locationRecords);
-
+    
+    // 对比更新文本缓存
+    let locationRecords;
+    if(addressType === 'text' && textLocationCache.length > 0) {
+      const newRecords = updateMardkAddressRecord(simpleRecords, textLocationCache);
+      console.log('newRecords--->', newRecords);
+      locationRecords  = await dealAddress(plugins, newRecords);
+      setTextLocationCache(locationRecords);
+    } else {
+      //经纬度处理
+      map.setZoom(4);
+      Message.success({ content: `图标正在渲染中...` });
+      locationRecords  = await dealAddress(plugins, simpleRecords);
+      setTextLocationCache(locationRecords);
+    }
     const recordsGeo = formateGeo(locationRecords);
 
-    const iconLayer = creatIconLayer(plugins, recordsGeo);
+    const newIconLayer = creatIconLayer(plugins, recordsGeo);
     const loca = new plugins.Loca.Container({
       map,
     });
-    loca.add(iconLayer);
+    loca.add(newIconLayer);
     setLocalContainer(loca);
-    setMakerslayer(iconLayer);
+    setIconlayer(newIconLayer);
   
     // Message.success({ content: `图标渲染完成 渲染数目${locationRecords.length}` });
-    const labelLayer = creatLabelLayer(recordsGeo);
-    setLabelMarker(labelLayer);
+    const newLabelLayer = creatLabelLayer(locationRecords);
+    
+    labelLayer.current = newLabelLayer;
     
 
-  }, [updateMap, addressFieldId, addressType, titleFieldID, lodingStatus ]);
+  }, [records, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
 
   function formateGeo(locationRecords) {
@@ -316,44 +354,64 @@ export const MapContent: React.FC<mapContentProps> = props => {
     return iconLayer;
   }
   
-  function creatLabelLayer(geoRecords) {
-   
-    // 标点的label
-    const labelMarkers = geoRecords.map(record => {
-      const title = record?.properties.title;
-      console.log('title--->', title);
-      const text = {
-        // 要展示的文字内容
-        content: title.length < 9 ? title : title.substring(0,8) + '...',
-        // 文字方向，有 icon 时为围绕文字的方向，没有 icon 时，则为相对 position 的位置
-        direction: 'right',
-        // 在 direction 基础上的偏移量
-        offset: [20, -15],
-        // 文字样式
-        style: labelStyle
-      }
+  function creatLabelLayer(locationRecords) {
 
-      return  new AMap.LabelMarker({
-          name: 'Label', // 此属性非绘制文字内容，仅最为标识使用
-          position: record?.geometry.coordinates,
-          zIndex: 10,
-          text: text,
+    
 
-      });
-      
-    });
-
-    const labelsLayer = new AMap.LabelsLayer({
-        zooms: [3, 20],
-        zIndex: 10,
-        // 该层内标注是否避让
-        collision: true,
-        // 设置 allowCollision：true，可以让标注避让用户的标注
-        allowCollision: true,
-    });
-    labelsLayer.add(labelMarkers);
-    map.add(labelsLayer);
-    return labelsLayer;
+		const onRender = function(){
+        // customLabelLayer.hide();
+		    const retina = AMap.Browser.retina;
+        const size = map.getSize();//resize
+        let width = size.width;
+        let height = size.height;
+        canvas.style.width = width+'px'
+        canvas.style.height = height+'px'
+        if(retina){//高清适配
+            width*=2;
+            height*=2;
+        }
+        canvas.width = width;
+        canvas.height = height;//清除画布
+		    const ctx = canvas.getContext("2d");
+        if(!ctx) {
+          return;
+        }
+    		
+    		ctx.strokeStyle = '#DCDFE5';
+    		ctx.beginPath();
+        ctx.font = "14px PingFang SC";
+        
+        locationRecords.forEach(locationRecord => {
+          const center = locationRecord.location;
+          if(!center) {
+            return
+          }
+    			let pos = map.lngLatToContainer(center);
+          const title = locationRecord.title.length < 9 ? locationRecord.title : locationRecord.title.substring(0,7) + '...';
+    			const text = ctx.measureText(title);
+    			if(retina){
+    			    pos = pos.multiplyBy(2);
+    			}
+    			ctx.moveTo(pos.x, pos.y);
+          ctx.fillStyle = '#fff';
+    		  ctx.fillRect(pos.x + 20, pos.y - 30, text.width + 16, 32);
+          ctx.fillStyle = "#2E2E2E";
+          ctx.fillText(title, pos.x + 28, pos.y - 10, 164);
+        });
+		 
+    		ctx.lineWidth = retina? 6 : 3;
+    		ctx.closePath();
+    		ctx.stroke();
+    		ctx.fill();
+		}
+		customLabelLayer.render = onRender;
+		customLabelLayer.setMap(map);
+    if(isShowLabel) {
+      customLabelLayer.setOpacity(1);
+    } else {
+      customLabelLayer.setOpacity(0);
+    }
+    return customLabelLayer;
   }
  
   /* 创建标记点 

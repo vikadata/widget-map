@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef, Children } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
 import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
-import { useDebounce } from 'ahooks';
+import { useDebounce, useRequest } from 'ahooks';
 import { TextInput, Message, Tooltip } from '@vikadata/components';
 import styles from './style.module.less';
 import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined } from '@vikadata/icons';
@@ -160,40 +160,13 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   };
 
   // 地址处理
-  async function dealAddress(plugins: IPlugins, records: ISimpleRecords[]) {
-    if(addressType === 'text') {
-      const asyncRecords = records.map(record => {
-        if(record.isAddressUpdate) {
-          return getRcoresLocationAsync(plugins, record);
-        } else {
-          return record
-        }
-      });
-      return Promise.all(asyncRecords);
-    } else if(addressType === 'latlng') {
-      return records.map(record => {
-        const location = record.address ? record.address.split(',') : '';
-        if(!location || location.length !== 2 || isNaN(parseFloat(location[0])) ||  isNaN(parseFloat(location[0]))) {
-          return null;
-        } else {
-          return {
-            ...record,
-            location: [
-                parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
-            ]
-          }
-        }
-      }).filter(Boolean);
-    }
-    return [];
-  }
-
-  // 配置改动直接全部更新
-  useAsyncEffect(async () => {
- 
-    if(!addressType || !addressFieldId || !records || !lodingStatus || !plugins) {
+  async function dealAddress(plugins: IPlugins | undefined, records: any) {
+    
+    
+    if(!plugins) {
       return;
     }
+
     if(iconLayer) {
       localContainer?.remove(iconLayer);
       map.remove(localContainer);
@@ -204,6 +177,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.remove(labelLayer.current);
     } 
 
+    Message.success({ content: `图标正在渲染中...`, messageKey: "loadingMark", duration: 0 });
     const simpleRecords: ISimpleRecords[] = records.map(record => {
       return {
         title: record.getCellValueString(titleFieldID) || '',
@@ -212,27 +186,61 @@ export const MapContent: React.FC<IMapContentProps> = props => {
         isAddressUpdate: true
       }
     });
-
-    
-
-    // 对比更新文本缓存
-    let locationRecords;
-    Message.success({ content: `图标正在渲染中...`, messageKey: "loadingMark", duration: 0 });
-      if(addressType === 'text' ) {
-        if(textLocationCache.length > 0) {
-          const newRecords = updateMardkAddressRecord(simpleRecords, textLocationCache);
-          locationRecords  = await dealAddress(plugins, newRecords);
-          setTextLocationCache(locationRecords);
-        } else {
-          locationRecords  = await dealAddress(plugins, simpleRecords);
-          setTextLocationCache(locationRecords);
+  
+    return new Promise<ISimpleRecords[]>(async (resolve, reject) => {
+      if(addressType === 'text') {
+        let newRecords = simpleRecords;
+        if(textLocationCache && textLocationCache.length > 0) { 
+          newRecords = updateMardkAddressRecord(simpleRecords, textLocationCache);
         }
-      } else {
-        //经纬度处理
-        map.setZoom(4);
-        locationRecords  = await dealAddress(plugins, simpleRecords);
+        const asyncRecords = newRecords.map(async record => {
+          if(record.isAddressUpdate) {
+            return getRcoresLocationAsync(plugins, record);
+          } else {
+            return record
+          }
+        });
+        const res  = await Promise.all(asyncRecords) as ISimpleRecords[];
+        resolve(res);
+      } else if(addressType === 'latlng') {
+        const res = simpleRecords.map(record => {
+          const location = record.address ? record.address.split(',') : '';
+          if(!location || location.length !== 2 || isNaN(parseFloat(location[0])) ||  isNaN(parseFloat(location[0]))) {
+            return null;
+          } else {
+            return {
+              ...record,
+              location: [
+                  parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
+              ]
+            }
+          }
+        }).filter(Boolean) as ISimpleRecords[];
+        console.log('res---->', res);
+        resolve(res);
       }
-    const recordsGeo = formateGeo(locationRecords);
+    });
+    
+  }
+
+
+  const { data } = useRequest(() => dealAddress(plugins, records), {
+    debounceWait: 500,
+    refreshDeps: [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus]
+  });
+ 
+
+  useEffect(() => {
+    console.log('data---->', data);
+    if(!plugins || !data) {
+      return;
+    }
+   
+
+    if(addressType === 'text') {
+      setTextLocationCache(data);
+    }
+    const recordsGeo = formateGeo(data);
     const newIconLayer = creatIconLayer(plugins, recordsGeo);
     const loca = new plugins.Loca.Container({
       map,
@@ -241,12 +249,11 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     setLocalContainer(loca);
     setIconlayer(newIconLayer);
     Message.success({ content: `图标渲染完成 渲染数目${recordsGeo.length}`, messageKey: "loadingMark", duration: 3 });
-    const newLabelLayer = creatLabelLayer(locationRecords);
+    const newLabelLayer = creatLabelLayer(data);
     
     labelLayer.current = newLabelLayer;
-    
+  }, [data]);
 
-  }, [records, addressFieldId, addressType, titleFieldID, lodingStatus ]);
 
 
   function formateGeo(locationRecords) {

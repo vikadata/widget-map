@@ -46,7 +46,7 @@ export const Setting: React.FC = () => {
 
   return isSettingOpened ? (
     <div className={styles.settingContent}>
-      <h1>地图配置 <a href="" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
+      <h1>地图配置 <a href="https://vika.cn/help/intro-widget-location-map/" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
       <div style={{ display: 'flex', height: '100%' }}>
         <div style={{ flexGrow: 1, overflow: 'auto'}}>
           <div className={styles.formItem}>
@@ -60,7 +60,7 @@ export const Setting: React.FC = () => {
                 onChange={option => setAddressFieldId(option.value)} 
               />
             </FormItem>
-            <FormItem label="切换地址的数据类型" help="数据类型说明">
+            <FormItem label="切换地址的数据类型" help="数据类型说明" link='https://vika.cn/help/intro-widget-location-map/#5-toc-title'>
                 <RadioGroup name="btn-group-with-default" isBtn value={addressType} block onChange={(e, value) => {
                   setAddressType(value);
                 }}>

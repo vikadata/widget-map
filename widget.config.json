@@ -3,17 +3,18 @@
   "spaceId": "spcGvC7cu3hQy",
   "entry": "./src/index.tsx",
   "name": {
-    "zh-CN": "坐标位置地图可视化版本",
+    "zh-CN": "坐标地图",
     "en-US": "Location map"
   },
   "icon": "./package_icon.png",
   "cover": "./cover.png",
   "authorIcon": "./author_icon.png",
   "description": {
-    "zh-CN": "将地理位置在地图上以坐标点的形式展示出来，帮助你了解位置分布情况",
+    "zh-CN": "将地理位置在地图上以点标记的形式展示出来，帮助你了解位置分布情况",
     "en-US": "Show the geographical location on the map as coordinate points"
   },
   "globalPackageId": "wpkzrscH0cVTL",
   "authorName": "Vika",
+  "website": "https://bbs.vika.cn/article/210",
   "sandbox": true
 }

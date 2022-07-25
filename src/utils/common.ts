@@ -30,11 +30,15 @@ export const getLocationAsync = (plugins: IPlugins | undefined, address: any) =>
 export const getRcoresLocationAsync = (plugins: IPlugins | undefined, records: ISimpleRecords) => {
   const { address } = records
 
-  if(!plugins) {
-    return;
-  }
+  
 
   return new Promise((resolve, reject) => {
+    if(!plugins) {
+      return resolve({
+        ...records,
+        location: null
+      });
+    }
     if(address &&  address !== '') {
       plugins.geocoder.getLocation(address, function(status, result) {
         if (status === 'complete' && result.info === 'OK') {

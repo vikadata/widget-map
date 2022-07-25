@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Setting } from './setting';
 import { MapContent } from './components/mapcontent';
 import AMapLoader from '@amap/amap-jsapi-loader';
@@ -26,7 +26,8 @@ export const MapComponent: React.FC = () => {
   const [AMap, setAMap] = useState<any>();
 
   // 地图实例
-  const [map, setMap] = useState<any>();
+  // const [map, setMap] = useState<any>();
+  const map = useRef();
 
   // 插件加载状态
   const [lodingStatus, setLodingtatus] = useState<boolean>(false);
@@ -52,7 +53,7 @@ export const MapComponent: React.FC = () => {
       securityJsCode: mapToken.security || 'e21828e25e02c281835f7b65c42fc418',
     }
     
-    window.forceWebGL = true;
+    // window.forceWebGL = true;
 
     AMapLoader.load({
       "key": mapToken.key || 'e979c61a0a16f0d80286e32c5075be6a',
@@ -74,10 +75,9 @@ export const MapComponent: React.FC = () => {
       },
     }).then((AMap) => {
       setLodingtatus(false);
-      console.log('window._AMapSecurityConfig', window._AMapSecurityConfig);
+      // console.log('window._AMapSecurityConfig', window._AMapSecurityConfig);
       setAMap(AMap);
     }).catch(e=>{
-        
         setLodingtatus(false);
         console.log('地图加载失败原因---->', e);
     });
@@ -98,12 +98,11 @@ export const MapComponent: React.FC = () => {
     const amap = new AMap.Map('mapContainer', {
       zoom: 4,//级别
       viewMode: '2D',//使用3D视图
-      // mapStyle: 'amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605',
+      mapStyle: 'amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605',
       jogEnable: false,
       animateEnable: false
     });
-    setMap(amap);
-
+    map.current = amap;
 
     window.amap = amap;
 
@@ -142,15 +141,14 @@ export const MapComponent: React.FC = () => {
   const { theme } = useMeta();
 
   useEffect(() => {
-    if(!map)
-    {
+    if(!map.current) {
       return;
     }
-
+    console.log('主题切换', map.current);
     if(theme === "light") {
-      map.setMapStyle('amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605');
+      map.current.setMapStyle('amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605');
     } else {
-      map.setMapStyle('amap://styles/0c95e40f6b9a6ef8a0b203e23fc4599f');
+      map.current.setMapStyle('amap://styles/0c95e40f6b9a6ef8a0b203e23fc4599f');
     }
 
   }, [theme, map]);
@@ -161,7 +159,7 @@ export const MapComponent: React.FC = () => {
        <MapContent 
           lodingStatus={lodingStatus}
           AMap={AMap}
-          map={map}
+          map={map.current}
           plugins={plugins}
        />
       </div>

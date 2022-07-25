@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useCloudStorage, useRecords, useExpandRecord, IExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
+import { useCloudStorage, useRecords, useExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
 import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
 import { useDebounce, useRequest } from 'ahooks';
 import { TextInput, Message, Tooltip } from '@vikadata/components';
@@ -177,7 +177,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.remove(labelLayer.current);
     } 
 
-    Message.success({ content: `图标正在渲染中...`, messageKey: "loadingMark", duration: 0 });
+    Message.success({ content: `地图正在加载中，请稍后`, messageKey: "loadingMark", duration: 0 });
     const simpleRecords: ISimpleRecords[] = records.map(record => {
       return {
         title: record.getCellValueString(titleFieldID) || '',
@@ -223,7 +223,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     
   }
 
-
+  // 配置切换更新
   const { data } = useRequest(() => dealAddress(plugins, records), {
     debounceWait: 500,
     refreshDeps: [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus]
@@ -248,7 +248,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     loca.add(newIconLayer);
     setLocalContainer(loca);
     setIconlayer(newIconLayer);
-    Message.success({ content: `图标渲染完成 渲染数目${recordsGeo.length}`, messageKey: "loadingMark", duration: 3 });
+    Message.success({ content: `地图加载完成，一共显示了${recordsGeo.length}个地址`, messageKey: "loadingMark", duration: 3 });
     const newLabelLayer = creatLabelLayer(data);
     
     labelLayer.current = newLabelLayer;
@@ -391,54 +391,6 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     return customLabelLayer;
   }
  
-  /* 创建标记点 
-  record: 标点信息
-  markerConfig: 标点参数配置
-  transfer: 创建路径对象
-  */
-  function creatMarker(
-    expandRecord: (expandRecordParams: IExpandRecord) => void,
-    record: any, 
-    icon: AMap.Icon,
-  ) {
-    if(!record.location) {
-      return;
-    }
-    const marker =  new AMap.LabelMarker({
-      icon,
-      //...其他Marker选项...，不包括content
-      // title: record.title,
-      text: { 
-        content: record.title,
-        direction: 'right',
-        fontSize: 14,
-        fillColor: '#2E2E2E',
-        fold: true
-      },
-      anchor: 'bottom-center',
-      clickable: true,
-      position: record.location,
-      extData: {
-        ...record
-      }
-    });
-    
-
-    marker.on('click', () => {
-      expandRecord({recordIds: [record.id]});
-    });
-    marker.on('mouseover', () => {
-      infoWindow.setContent(`<div class="infowindowContent" ><h1>${record.title}</h1><p>${record.address}</p></div>`)
-      infoWindow.open(map, record.location);
-    });
-    
-    marker.on('mouseout', () => {
-      infoWindow.close(map);
-    });
-
-    return marker;
-  }
-
   function backLocation(plugins) {
     plugins.citySearch.getLocalCity(function (status, result) {
       if (status === 'complete' && result.info === 'OK') {
@@ -477,9 +429,9 @@ export const MapContent: React.FC<IMapContentProps> = props => {
             </div>
           </Tooltip>
           <Tooltip content='回到当前城市' placement='left'>
-          <div className={styles.backPosition} onClick={backLocation} >
-            <PositionOutlined size={16} className={styles.tooBarIcon} />
-          </div>
+            <div className={styles.backPosition}  >
+              <PositionOutlined size={16} className={styles.tooBarIcon} onClick={backLocation} />
+            </div>
           </Tooltip>
           <div className={styles.toolBar}>
             <ZoomInOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />

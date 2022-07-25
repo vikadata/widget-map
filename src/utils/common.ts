@@ -1,4 +1,5 @@
 import { IPlugins, ISimpleRecords } from '../interface/map';
+import { IExpandRecord } from '@vikadata/widget-sdk';
 
 // 根据地址获取去高德地图定位点
 export const getLocationAsync = (plugins: IPlugins | undefined, address: any) => {
@@ -164,3 +165,45 @@ export const updateMardkAddressRecord = (simpleRecords, markersLayer) => {
 
       return markAddressRecordsCopy.concat(addreRcored);
 }
+
+
+ /* 创建标记点 
+  ** record: 标点信息
+  ** markerConfig: 标点参数配置
+  ** transfer: 创建路径对象
+  */
+export const creatMarker = (
+    expandRecord: (expandRecordParams: IExpandRecord) => void,
+    record: any, 
+    icon: AMap.Icon,
+    infoWindow,
+    map
+  ) => {
+    if(!record.location) {
+      return;
+    }
+    const marker =  new AMap.Marker({
+      icon,
+      anchor: 'bottom-center',
+      clickable: true,
+      position: record.location,
+      extData: {
+        ...record
+      }
+    });
+    
+
+    marker.on('click', () => {
+      expandRecord({recordIds: [record.id]});
+    });
+    marker.on('mouseover', () => {
+      infoWindow.setContent(`<div class="infowindowContent" ><h1>${record.title}</h1><p>${record.address}</p></div>`)
+      infoWindow.open(map, record.location);
+    });
+    
+    marker.on('mouseout', () => {
+      infoWindow.close(map);
+    });
+
+    return marker;
+  }

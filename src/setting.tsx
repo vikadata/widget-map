@@ -60,11 +60,11 @@ export const Setting: React.FC = () => {
                 onChange={option => setAddressFieldId(option.value)} 
               />
             </FormItem>
-            <FormItem label="切换地址的数据类型" help="数据类型说明" link='https://vika.cn/help/intro-widget-location-map/#5-toc-title'>
+            <FormItem label="格式说明" help="格式说明" link='https://vika.cn/help/intro-widget-location-map/#5-toc-title'>
                 <RadioGroup name="btn-group-with-default" isBtn value={addressType} block onChange={(e, value) => {
                   setAddressType(value);
                 }}>
-                  <Radio value="text">文本</Radio>
+                  <Radio value="text">文本地址</Radio>
                   <Radio value="latlng">经纬度</Radio>
                 </RadioGroup>
             </FormItem>
@@ -76,13 +76,13 @@ export const Setting: React.FC = () => {
               />
             </FormItem>
             <h1>其他配置</h1>
-            <label className={styles.settingLabel}>第三方API验证</label>
-            <div className={styles.settingToken} onClick={() => setModalVisible(true)}>填写私人API验证 <ChevronRightOutlined /></div>
+            <label className={styles.settingLabel}>填写你的高德地图账号以提高流量（选填）</label>
+            <div className={styles.settingToken} onClick={() => setModalVisible(true)}>填写应用的Key和秘钥 <ChevronRightOutlined /></div>
           </div>
         </div>
       </div>
       <Modal 
-        title="填写私人 API 验证" 
+        title="填写应用的Key和秘钥" 
         visible={modalVisible} 
         onCancel={() => setModalVisible(false)}
         onOk={() => confirmToken()}
@@ -91,8 +91,8 @@ export const Setting: React.FC = () => {
         <div className={styles.modalContent}>
             <ul>
                 <li>1. 前往 <LinkButton underline={false} href="https://lbs.amap.com/" target="_blank">高德地图</LinkButton> 注册并登录 </li>
-                <li>2. 在<LinkButton underline={false} href="https://console.amap.com/dev/key/app" target="_blank">后台</LinkButton>获取个人秘钥和 Key,并在下方输入即可</li>
-                <li>3. 详细教程请查阅 <LinkButton underline={false} href="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare" target="_blank">获取私人 API 验证</LinkButton></li>
+                <li>2. 在<LinkButton underline={false} href="https://console.amap.com/dev/key/app" target="_blank">后台</LinkButton>创建应用并添加Key <LinkButton underline={false} href="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare" target="_blank">官方教程</LinkButton></li>
+                <li>3. 在<LinkButton underline={false} href="https://console.amap.com/dev/key/app" target="_blank">后台</LinkButton>获取Key和安全密钥输入到下方</li>
             </ul>
               <FormItem label="Key">
               <TextInput

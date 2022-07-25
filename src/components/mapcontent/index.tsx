@@ -218,7 +218,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
             }
           }
         }).filter(Boolean) as ISimpleRecords[];
-        console.log('res---->', res);
+       
         resolve(res);
       }
     });
@@ -233,7 +233,6 @@ export const MapContent: React.FC<IMapContentProps> = props => {
  
 
   useEffect(() => {
-    console.log('data---->', data);
     if(!plugins || !data) {
       return;
     }

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useActiveViewId, useViewIds, useFields, getLanguage } from '@vikadata/widget-sdk';
+import React, { useEffect, useState } from 'react';
+import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useActiveViewId, useViewIds, useFields, getLanguage, RuntimeEnv, useMeta } from '@vikadata/widget-sdk';
 import { RadioGroup, Radio, TextInput, Modal, Message, LinkButton } from '@vikadata/components';
 import styles from './setting.module.less';
 import { InformationLargeOutlined, ChevronRightOutlined } from '@vikadata/icons';
@@ -9,7 +9,7 @@ import { Strings, t } from './i18n';
 
 export const Setting: React.FC = () => {
   // 设置是否打开
-  const [isSettingOpened] = useSettingsButton();
+  const [isSettingOpened, toggleSettings] = useSettingsButton();
   // useActiveViewId 存在在仪表盘下新建获取为空，所以需要拿到所有表的第一个
   const defaultViewId = useActiveViewId() || useViewIds()[0];
   const defaultFields = useFields(defaultViewId);
@@ -34,6 +34,8 @@ export const Setting: React.FC = () => {
 
   const lang = getLanguage().replace('-', '_');
 
+  const meta = useMeta();
+
   const confirmToken = () => {
     setToken({
       key: apiToken,
@@ -45,7 +47,7 @@ export const Setting: React.FC = () => {
     AMapLoader.reset();
   }
 
-  return isSettingOpened ? (
+  return isSettingOpened && meta.runtimeEnv == RuntimeEnv.Desktop ? (
     <div className={styles.settingContent}>
       <h1>{t(Strings.map_setting)} <a href="https://vika.cn/help/intro-widget-location-map/" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
       <div style={{ display: 'flex', height: '100%' }}>

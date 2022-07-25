@@ -429,8 +429,8 @@ export const MapContent: React.FC<IMapContentProps> = props => {
             </div>
           </Tooltip>
           <Tooltip content='回到当前城市' placement='left'>
-            <div className={styles.backPosition}  >
-              <PositionOutlined size={16} className={styles.tooBarIcon} onClick={backLocation} />
+            <div className={styles.backPosition} >
+              <PositionOutlined size={16} className={styles.tooBarIcon} onClick={() => backLocation(plugins)} />
             </div>
           </Tooltip>
           <div className={styles.toolBar}>

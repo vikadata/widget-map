@@ -4,7 +4,7 @@
   "entry": "./src/index.tsx",
   "name": {
     "zh-CN": "坐标地图",
-    "en-US": "Location map"
+    "en-US": "Location Map"
   },
   "icon": "./package_icon.png",
   "cover": "./cover.png",

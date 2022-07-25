@@ -11,6 +11,8 @@ import markerIcon from '../../static/img/mark.svg';
 import markerSelectedIcon from '../../static/img/markSelect.svg';
 import { IPlugins, ISimpleRecords } from '../../interface/map';
 import "@amap/amap-jsapi-types";
+import { Strings, t } from '../../i18n';
+import { slice } from 'lodash';
 
 interface IMapContentProps {
   lodingStatus: boolean,
@@ -177,8 +179,8 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.remove(labelLayer.current);
     } 
 
-    Message.success({ content: `地图正在加载中，请稍后`, messageKey: "loadingMark", duration: 0 });
-    const simpleRecords: ISimpleRecords[] = records.map(record => {
+    Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
+    const simpleRecords: ISimpleRecords[] = slice(records, 0 , 2000).map(record => {
       return {
         title: record.getCellValueString(titleFieldID) || '',
         address: record.getCellValueString(addressFieldId) || '',
@@ -248,7 +250,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     loca.add(newIconLayer);
     setLocalContainer(loca);
     setIconlayer(newIconLayer);
-    Message.success({ content: `地图加载完成，一共显示了${recordsGeo.length}个地址`, messageKey: "loadingMark", duration: 3 });
+    Message.success({ content: `${t(Strings.map_loading_complte1)}${recordsGeo.length}${t(Strings.map_loading_complte2)}`, messageKey: "loadingMark", duration: 3 });
     const newLabelLayer = creatLabelLayer(data);
     
     labelLayer.current = newLabelLayer;
@@ -412,7 +414,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
               <div className={styles.searchBlock}>
                 <TextInput
                   className={styles.searchInput}
-                  placeholder="请输入内容"
+                  placeholder={t(Strings.enter_info)}
                   size="small"
                   id="searchInput"
                   value={searchKey}
@@ -422,13 +424,13 @@ export const MapContent: React.FC<IMapContentProps> = props => {
                 />
               </div>
           </div>
-          <Tooltip content={isShowLabel ? '隐藏地址名称' : '显示地址名称'} placement='left'>
+          <Tooltip content={isShowLabel ? t(Strings.hide_address_name) : t(Strings.show_address_name)} placement='left'>
             <div className={styles.labelControl} >
                 { isShowLabel ? <EyeNormalOutlined size={16} className={styles.tooBarIcon} onClick={() => setIsShowLabel(!isShowLabel)}   /> : 
                 <EyeCloseOutlined size={16} className={styles.tooBarIcon} onClick={() => setIsShowLabel(!isShowLabel)} /> }
             </div>
           </Tooltip>
-          <Tooltip content='回到当前城市' placement='left'>
+          <Tooltip content={t(Strings.location_city)} placement='left'>
             <div className={styles.backPosition} >
               <PositionOutlined size={16} className={styles.tooBarIcon} onClick={() => backLocation(plugins)} />
             </div>

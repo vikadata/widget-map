@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useActiveViewId, useViewIds, useFields } from '@vikadata/widget-sdk';
+import React, { useEffect, useState } from 'react';
+import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useActiveViewId, useViewIds, useFields, getLanguage, RuntimeEnv, useMeta } from '@vikadata/widget-sdk';
 import { RadioGroup, Radio, TextInput, Modal, Message, LinkButton } from '@vikadata/components';
 import styles from './setting.module.less';
 import { InformationLargeOutlined, ChevronRightOutlined } from '@vikadata/icons';
 import { IMapToken } from './interface/map';
 import AMapLoader from '@amap/amap-jsapi-loader';
+import { Strings, t } from './i18n';
 
 export const Setting: React.FC = () => {
   // 设置是否打开
-  const [isSettingOpened] = useSettingsButton();
+  const [isSettingOpened, toggleSettings] = useSettingsButton();
   // useActiveViewId 存在在仪表盘下新建获取为空，所以需要拿到所有表的第一个
   const defaultViewId = useActiveViewId() || useViewIds()[0];
   const defaultFields = useFields(defaultViewId);
@@ -23,9 +24,6 @@ export const Setting: React.FC = () => {
   // 名称字段ID
   const [titleFieldID, setTitleFieldId] = useCloudStorage<string>('title', defaultFields[0].fieldData.id);
 
-  // 更新地图
-  // const [updateMap, setUpdateMap] = useCloudStorage<boolean>('updateMap', false);
-
   // 高德apiToken
   const [apiToken, setApiToken] = useState<string>('');
   const [securityJsCode, setSecurityJsCode] = useState<string>('');
@@ -34,7 +32,9 @@ export const Setting: React.FC = () => {
 
   const [mapToken, setToken] = useCloudStorage<IMapToken>('mapToken');
 
-  
+  const lang = getLanguage().replace('-', '_');
+
+  const meta = useMeta();
 
   const confirmToken = () => {
     setToken({
@@ -47,71 +47,76 @@ export const Setting: React.FC = () => {
     AMapLoader.reset();
   }
 
-  return isSettingOpened ? (
+  return isSettingOpened && meta.runtimeEnv == RuntimeEnv.Desktop ? (
     <div className={styles.settingContent}>
-      <h1>地图配置 <a href="" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
+      <h1>{t(Strings.map_setting)} <a href="https://vika.cn/help/intro-widget-location-map/" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
       <div style={{ display: 'flex', height: '100%' }}>
         <div style={{ flexGrow: 1, overflow: 'auto'}}>
           <div className={styles.formItem}>
-            <FormItem label="选择一个视图来读取地理位置" >
+            <FormItem label={t(Strings.select_view)} >
               <ViewPicker   viewId={viewId} onChange={option => setViewId(option.value)} />
             </FormItem>
-            <FormItem label="选择一个包含地址或者经纬度的字段" >
+            <FormItem label={t(Strings.select_feild)} >
               <FieldPicker  
                 viewId={viewId} 
                 fieldId={addressFieldId}
                 onChange={option => setAddressFieldId(option.value)} 
               />
             </FormItem>
-            <FormItem label="切换地址的数据类型" help="数据类型说明">
+            <FormItem label={t(Strings.switch_address_type)} help={t(Strings.formate_type_info)} link='https://vika.cn/help/intro-widget-location-map/#5-toc-title'>
                 <RadioGroup name="btn-group-with-default" isBtn value={addressType} block onChange={(e, value) => {
                   setAddressType(value);
                 }}>
-                  <Radio value="text">文本</Radio>
-                  <Radio value="latlng">经纬度</Radio>
+                  <Radio value="text">{t(Strings.text_type)}</Radio>
+                  <Radio value="latlng">{t(Strings.latlng_type)}</Radio>
                 </RadioGroup>
             </FormItem>
-            <FormItem label="选择一个字段作为地址名称" >
+            <FormItem label={t(Strings.select_name_field)} >
               <FieldPicker  
                 viewId={viewId} 
                 fieldId={titleFieldID} 
                 onChange={option => setTitleFieldId(option.value)} 
               />
             </FormItem>
-            <h1>其他配置</h1>
-            <label className={styles.settingLabel}>第三方API验证</label>
-            <div className={styles.settingToken} onClick={() => setModalVisible(true)}>填写私人API验证 <ChevronRightOutlined /></div>
-         
-            {/* <FormItem label="" >
-              <Button block onClick={() => setUpdateMap(!updateMap)}>更新地图</Button>
-            </FormItem> */}
+            <h1>{t(Strings.more_setting)}</h1>
+            <label className={styles.settingLabel}>{t(Strings.setting_api_info)}</label>
+            <div className={styles.settingToken} onClick={() => setModalVisible(true)}>{t(Strings.setting_api_key)} <ChevronRightOutlined /></div>
           </div>
         </div>
       </div>
       <Modal 
-        title="填写私人 API 验证" 
+        title={t(Strings.setting_modal_title)}  
         visible={modalVisible} 
         onCancel={() => setModalVisible(false)}
         onOk={() => confirmToken()}
         width={360}
+        okText={t(Strings.confirm)}
+        cancelText={t(Strings.cancel)}
       >
         <div className={styles.modalContent}>
             <ul>
-                <li>1. 前往 <LinkButton underline={false} href="https://lbs.amap.com/" target="_blank">高德地图</LinkButton> 注册并登录 </li>
-                <li>2. 在<LinkButton underline={false} href="https://console.amap.com/dev/key/app" target="_blank">后台</LinkButton>获取个人秘钥和 Key,并在下方输入即可</li>
-                <li>3. 详细教程请查阅 <LinkButton underline={false} href="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare" target="_blank">获取私人 API 验证</LinkButton></li>
+                <li>1. {t(Strings.go_to)}  <LinkButton underline={false} href="https://lbs.amap.com/" target="_blank">{t(Strings.amap)} </LinkButton> {t(Strings.amap_login)} </li>
+                { lang === 'zh_CN' ? 
+                  <li>2. 在<LinkButton underline={false} href="https://console.amap.com/dev/key/app" target="_blank">后台</LinkButton>创建应用并添加Key <LinkButton underline={false} href="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare" target="_blank">（官方教程）</LinkButton></li> :
+                  <li>2. <span> Create an app and add a key  on the platform</span> <LinkButton underline={false} href="https://lbs.amap.com/api/jsapi-v2/guide/abc/prepare" target="_blank">（official tutorial）</LinkButton></li>
+                }
+                {
+                  lang === 'zh_CN' ? 
+                  <li>3. 在<LinkButton underline={false} href="https://console.amap.com/dev/key/app" target="_blank">后台</LinkButton>获取Key和安全密钥输入到下方</li> :
+                  <li>3. Get the key and jscode,enter them below</li>
+                }
             </ul>
               <FormItem label="Key">
               <TextInput
-                placeholder="请输入内容"
+                placeholder={t(Strings.enter_info)} 
                 value={apiToken}
                 onChange={e => setApiToken(e.target.value)}
                 block
               />
             </FormItem>
-            <FormItem label="密钥"  >
+            <FormItem label={t(Strings.jscode)}   >
               <TextInput
-                placeholder="请输入内容"
+                placeholder={t(Strings.enter_info)} 
                 value={securityJsCode}
                 onChange={e => setSecurityJsCode(e.target.value)}
                 block

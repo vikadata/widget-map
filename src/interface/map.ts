@@ -5,6 +5,7 @@ export interface IPlugins {
   transfer?: any; // 路线规划
   autoComplete?: any, // 搜索
   citySearch?: any, // 城市定位
+  Loca?: any, // 数据可视化
 }
 
 export interface ISimpleRecords {
@@ -13,7 +14,6 @@ export interface ISimpleRecords {
   title: string;
   location?: string[];
   isAddressUpdate?: boolean;
-  isTitleUpdate?: boolean;
 }
 
 export interface IMapToken {

@@ -1,16 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Setting } from './setting';
 import { MapContent } from './components/mapcontent';
 import AMapLoader from '@amap/amap-jsapi-loader';
-// import { useMount } from 'ahooks';
 import { IPlugins, IMapToken } from './interface/map';
 import { useCloudStorage, useMeta } from '@vikadata/widget-sdk';
 import "@amap/amap-jsapi-types";
+
 declare global {
   interface Window { 
     AMap: any, // 地图API
     infoWindow: AMap.InfoWindow, // 信息弹窗实例
-    _AMapSecurityConfig: IAMapSecurityConfig
+    _AMapSecurityConfig: IAMapSecurityConfig,
+    Loca: any
   }
 }
 
@@ -25,7 +26,8 @@ export const MapComponent: React.FC = () => {
   const [AMap, setAMap] = useState<any>();
 
   // 地图实例
-  const [map, setMap] = useState<any>();
+  // const [map, setMap] = useState<any>();
+  const map = useRef();
 
   // 插件加载状态
   const [lodingStatus, setLodingtatus] = useState<boolean>(false);
@@ -46,12 +48,13 @@ export const MapComponent: React.FC = () => {
       setAMap(window.AMap);
       return;
     }
-    console.log('AMapLoader--->', AMapLoader);
 
     window._AMapSecurityConfig = {
       securityJsCode: mapToken.security || 'e21828e25e02c281835f7b65c42fc418',
     }
     
+    // window.forceWebGL = true;
+
     AMapLoader.load({
       "key": mapToken.key || 'e979c61a0a16f0d80286e32c5075be6a',
       "version": "2.0",
@@ -67,12 +70,14 @@ export const MapComponent: React.FC = () => {
           "version": '1.1',   // AMapUI 版本
           "plugins":['overlay/SimpleMarker'],       // 需要加载的 AMapUI ui插件
       },
+      "Loca":{                // 是否加载 Loca， 缺省不加载
+          "version": '2.0.0'  // Loca 版本，缺省 1.3.2
+      },
     }).then((AMap) => {
       setLodingtatus(false);
-      console.log('window._AMapSecurityConfig', window._AMapSecurityConfig);
+      // console.log('window._AMapSecurityConfig', window._AMapSecurityConfig);
       setAMap(AMap);
     }).catch(e=>{
-        
         setLodingtatus(false);
         console.log('地图加载失败原因---->', e);
     });
@@ -81,11 +86,9 @@ export const MapComponent: React.FC = () => {
 
   // 初始化地图
   useEffect(() => {
-    console.log('执行2');
     if(!AMap) {
       return;
     }
-    console.log('执行3');
     initMap(AMap);
     setLodingtatus(true);
   }, [AMap]);
@@ -95,28 +98,15 @@ export const MapComponent: React.FC = () => {
     const amap = new AMap.Map('mapContainer', {
       zoom: 4,//级别
       viewMode: '2D',//使用3D视图
-      // mapStyle: 'amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605',
+      mapStyle: 'amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605',
       jogEnable: false,
       animateEnable: false
     });
-    setMap(amap);
+    map.current = amap;
 
-    // 添加工具条
-    // amap.addControl(new AMap.ToolBar());
     window.amap = amap;
 
 
-    // 设置路径导航插件
-    // const transfer = new AMap.Transfer({
-    //   // city 指定进行编码查询的城市，支持传入城市名、adcode 和 citycode
-    //   city: '全国',
-    //   map: amap,
-    //   hideMarkers: true,
-    //   extensions: 'all',
-    //   policy: 'LEAST_TIME',
-    //   panel: 'commute'
-    // });
-   
 
     // 添加地址编码插件
     const geocoder = new AMap.Geocoder({
@@ -133,13 +123,16 @@ export const MapComponent: React.FC = () => {
     });
 
     // 城市定位
-    var citySearch = new AMap.CitySearch();
+    const citySearch = new AMap.CitySearch();
 
+    // Loca 数据可视化
+    const Loca = window.Loca;
     setPlugins({
       //transfer,
       geocoder,
       autoComplete,
-      citySearch
+      citySearch,
+      Loca
     });
 
   }
@@ -148,15 +141,14 @@ export const MapComponent: React.FC = () => {
   const { theme } = useMeta();
 
   useEffect(() => {
-    if(!map)
-    {
+    if(!map.current) {
       return;
     }
-
+    console.log('主题切换', map.current);
     if(theme === "light") {
-      map.setMapStyle('amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605');
+      map.current.setMapStyle('amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605');
     } else {
-      map.setMapStyle('amap://styles/0c95e40f6b9a6ef8a0b203e23fc4599f');
+      map.current.setMapStyle('amap://styles/0c95e40f6b9a6ef8a0b203e23fc4599f');
     }
 
   }, [theme, map]);
@@ -167,7 +159,7 @@ export const MapComponent: React.FC = () => {
        <MapContent 
           lodingStatus={lodingStatus}
           AMap={AMap}
-          map={map}
+          map={map.current}
           plugins={plugins}
        />
       </div>

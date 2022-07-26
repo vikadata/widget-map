@@ -1,0 +1,112 @@
+{
+  "strings": { 
+    "map_setting": {
+        "zh_CN": "地图配置",
+        "en_US": "Map setting"
+    },
+    "select_view": {
+        "zh_CN": "选择一个视图来读取地理位置",
+        "en_US": "View to read the geographic location"
+    },
+    "select_feild": {
+        "zh_CN": "选择一个包含地址或者经纬度的字段﻿",
+        "en_US": "Field containing an address or latitude and longitude"
+    },
+    "switch_address_type": {
+        "zh_CN": "切换地址的格式",
+        "en_US": "Format of the address"
+    },
+    "formate_type_info": {
+        "zh_CN": "格式说明",
+        "en_US": "Format specification"
+    },
+    "text_type": {
+        "zh_CN": "文本地址",
+        "en_US": "Text"
+    },
+    "latlng_type": {
+        "zh_CN": "经纬度",
+        "en_US": "Coordinate"
+    },
+    "select_name_field": {
+        "zh_CN": "选择一个字段作为地址名称",
+        "en_US": "Field as the address name"
+    },
+    "more_setting": {
+        "zh_CN": "其他配置",
+        "en_US": "More settings"
+    },
+    "setting_api_info": {
+        "zh_CN": "填写你的高德地图账号以提高流量（选填)",
+        "en_US": "Fill in your AMAP account(optional)"
+    },
+    "setting_api_key": {
+        "zh_CN": "填写应用的Key和秘钥",
+        "en_US": "Fill in your app Key and jscode"
+    },
+    "setting_modal_title": {
+        "zh_CN": "填写应用的Key和秘钥",
+        "en_US": "Fill in your app Key and jscode"
+    },
+    "go_to": {
+        "zh_CN": "前往",
+        "en_US": "Go to"
+    },
+    "amap": {
+        "zh_CN": "高德地图",
+        "en_US": "AMAP"
+    },
+    "amap_login": {
+        "zh_CN": "注册并登录",
+        "en_US": "to register and log in"
+    },
+    "jscode": {
+        "zh_CN": "密钥",
+        "en_US": "Jscode"
+    },
+    "enter_info": {
+        "zh_CN": "请输入内容",
+        "en_US": "Please enter the content"
+    },
+    "show_address_name": {
+        "zh_CN": "显示地址名称",
+        "en_US": "Display address name"
+    },
+    "hide_address_name": {
+        "zh_CN": "隐藏地址名称",
+        "en_US": "Hidden address name"
+    },
+    "location_city": {
+        "zh_CN": "定位当前城市",
+        "en_US": "Locate the current city"
+    },
+    "zoom_in": {
+        "zh_CN": "放大地图",
+        "en_US": "Zoom in"
+    },
+    "zoom_out": {
+        "zh_CN": "缩小地图",
+        "en_US": "Zoom out"
+    },
+    "map_loading": {
+        "zh_CN": "地图正在加载中，请稍后",
+        "en_US": "The map is loading, please wait"
+    },
+    "map_loading_complte1": {
+        "zh_CN": "地图已加载",
+        "en_US": "The map update is completed, "
+    },
+    "map_loading_complte2": {
+        "zh_CN": "个地址",
+        "en_US": " addresses are loaded"
+    },
+    "confirm": {
+      "zh_CN": "确定",
+      "en_US": "Confirm"
+    },
+    "cancel": {
+      "zh_CN": "取消",
+      "en_US": "Cancel"
+    }
+  }
+}

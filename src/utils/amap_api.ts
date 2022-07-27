@@ -175,14 +175,14 @@ export const getCoordinateRecords = async (
     textCoordinateRecordsCache, 
     mapRecords: ISimpleRecords[]
   ) => {
-  
+ 
   return new Promise<ISimpleRecords[]>(async (resolve, reject) => {
     if(addressType === 'text') {
-      let newRecords = mapRecords;
-      if(textCoordinateRecordsCache && textCoordinateRecordsCache.length > 0) { 
-        newRecords = updateMardkAddressRecord(mapRecords, textCoordinateRecordsCache);
+   
+      if(textCoordinateRecordsCache && textCoordinateRecordsCache.length < 0) { 
+        resolve([]);
       }
-      const asyncRecords = newRecords.map(async record => {
+      const asyncRecords = textCoordinateRecordsCache.map(async record => {
         if(record.isAddressUpdate) {
           return getRcoresLocationAsync(plugins, record);
         } else {

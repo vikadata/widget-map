@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
-import { getLocationAsync, getCoordinateRecords } from '../../utils/amap_api';
+import { getLocationAsync, getCoordinateRecords, updateMardkAddressRecord } from '../../utils/amap_api';
 import { useDebounce, useRequest } from 'ahooks';
 import { TextInput, Message, Tooltip, Button } from '@vikadata/components';
 import styles from './style.module.less';
@@ -162,11 +162,17 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.setCenter([ e.poi.location.lng, e.poi.location.lat]);
   };
 
-  const updateTextCache = (value: boolean) => {
-    messageAntd.destroy();
-    setIsSetTextCache(value);
-    runUpdateMap();
+  const updateTextCache = (mapRecords: ISimpleRecords) => {
+    const newCache =  updateMardkAddressRecord( mapRecords,textCoordinateRecordsCache);
+    setTextCoordinateRecordsCache(newCache);
+    setIsSetTextCache(true);
   }
+
+  useEffect(() => {
+    if(isSetTextCache) {
+      messageAntd.destroy();
+    }
+  }, [isSetTextCache]);
 
   const closeMessage = () => {
     messageAntd.destroy();
@@ -177,13 +183,24 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       return;
     }
     
+     // 限制加载标点数量
+     const mapRecords =  slice(records, 0 , 2000).map(record => {
+      return {
+        title: record.getCellValueString(titleFieldID) || '',
+        address: record.getCellValueString(addressFieldId) || '',
+        id: record.id,
+        isAddressUpdate: true
+      }
+    });
+
+    
     if(addressType === 'text' && !isSetTextCache) {
       messageAntd.info({
         icon: <DefaultFilled size={16} />,
         content: ( 
           <div className={styles.antdMessageContent}>
             <span>检测到表格内的数据有更新，你可以选择重新加载地图</span>
-            <span className={styles.antdMessageButton} onClick={() => updateTextCache(true)} >重新加载</span>
+            <span className={styles.antdMessageButton} onClick={() => updateTextCache(mapRecords)} >重新加载</span>
             <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10}/>
           </div>
         ),
@@ -204,15 +221,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.remove(labelLayer.current);
     }
 
-    // 限制加载标点数量
-    const mapRecords =  slice(records, 0 , 2000).map(record => {
-      return {
-        title: record.getCellValueString(titleFieldID) || '',
-        address: record.getCellValueString(addressFieldId) || '',
-        id: record.id,
-        isAddressUpdate: true
-      }
-    });
+   
 
     Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
 
@@ -220,9 +229,9 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   };
 
   // 配置切换更新
-  const { data, run : runUpdateMap } = useRequest(() => updateMap(plugins, records), {
+  const { data, } = useRequest(() => updateMap(plugins, records), {
     debounceWait: 500,
-    refreshDeps: [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus]
+    refreshDeps: [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus, textCoordinateRecordsCache]
   });
  
 
@@ -232,7 +241,6 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     }
    
     if(addressType === 'text' && isSetTextCache) {
-      setTextCoordinateRecordsCache(data);
       setIsSetTextCache(false);
     }
 

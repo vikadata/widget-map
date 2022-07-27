@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
-import { getLocationAsync, getCoordinateRecords, updateMardkAddressRecord } from '../../utils/amap_api';
+import { getLocationAsync, getCoordinateRecords } from '../../utils/amap_api';
 import { useDebounce, useRequest } from 'ahooks';
 import { TextInput, Message, Tooltip, Button } from '@vikadata/components';
 import styles from './style.module.less';
@@ -162,9 +162,9 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.setCenter([ e.poi.location.lng, e.poi.location.lat]);
   };
 
-  const updateTextCache = (mapRecords: ISimpleRecords) => {
-    const newCache =  updateMardkAddressRecord( mapRecords,textCoordinateRecordsCache);
-    setTextCoordinateRecordsCache(newCache);
+  const updateTextCache = (mapRecords: ISimpleRecords[]) => {
+    Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
+    getTextCoordinate(mapRecords);
     setIsSetTextCache(true);
   }
 
@@ -178,36 +178,10 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     messageAntd.destroy();
   }
 
-  const updateMap = async (plugins, records) => {
+ 
+
+  useEffect(() => {
     if(!plugins) {
-      return;
-    }
-    
-     // 限制加载标点数量
-     const mapRecords =  slice(records, 0 , 2000).map(record => {
-      return {
-        title: record.getCellValueString(titleFieldID) || '',
-        address: record.getCellValueString(addressFieldId) || '',
-        id: record.id,
-        isAddressUpdate: true
-      }
-    });
-
-    
-    if(addressType === 'text' && !isSetTextCache) {
-      messageAntd.info({
-        icon: <DefaultFilled size={16} />,
-        content: ( 
-          <div className={styles.antdMessageContent}>
-            <span>检测到表格内的数据有更新，你可以选择重新加载地图</span>
-            <span className={styles.antdMessageButton} onClick={() => updateTextCache(mapRecords)} >重新加载</span>
-            <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10}/>
-          </div>
-        ),
-        key: 'loadTextDataMessage',
-        duration: 0
-      });
-
       return;
     }
 
@@ -221,52 +195,97 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.remove(labelLayer.current);
     }
 
+     // 限制加载标点数量
+    const mapRecords =  slice(records, 0 , 2000).map(record => {
+      return {
+        title: record.getCellValueString(titleFieldID) || '',
+        address: record.getCellValueString(addressFieldId) || '',
+        id: record.id,
+        isAddressUpdate: true
+      }
+    });
+
+    
+    if(addressType === 'text') {
+      messageAntd.info({
+        icon: <DefaultFilled size={16} />,
+        content: ( 
+          <div className={styles.antdMessageContent}>
+            <span>{t(Strings.run_load_text_icon)}</span>
+            <span className={styles.antdMessageButton} onClick={() => updateTextCache(mapRecords)} >重新加载</span>
+            <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10}/>
+          </div>
+        ),
+        key: 'loadTextDataMessage',
+        duration: 0
+      });
+    } else {
+      Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
+      const res = mapRecords.map(record => {
+        const location = record.address ? record.address.split(',') : '';
+        if(!location || location.length !== 2 || isNaN(parseFloat(location[0])) ||  isNaN(parseFloat(location[0]))) {
+          return null;
+        } else {
+          return {
+            ...record,
+            location: [
+                parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
+            ]
+          }
+        }
+      }).filter(Boolean) as ISimpleRecords[];
+      creatLayer(plugins, res);
+    }
    
 
-    Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
-
-    return getCoordinateRecords(plugins, addressType, textCoordinateRecordsCache, mapRecords);
-  };
+  }, [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus]);
 
   // 配置切换更新
-  const { data, } = useRequest(() => updateMap(plugins, records), {
+  const { data, run : getTextCoordinate} = useRequest(mapRecords => getCoordinateRecords(plugins, textCoordinateRecordsCache, mapRecords), {
     debounceWait: 500,
-    refreshDeps: [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus, textCoordinateRecordsCache]
+    manual: true
   });
  
 
+  const creatLayer = (plugins, data) => {
+     // 创建icon图层
+     const recordsGeo = getGeoJson(data);
+     const newIconLayer = creatIconLayer(map, plugins, expandRecord, markerIcon, infoWindow, recordsGeo);
+     const loca = new plugins.Loca.Container({
+       map,
+     });
+     loca.add(newIconLayer);
+     setLocalContainer(loca);
+     setIconlayer(newIconLayer);
+ 
+     // 创建label图层
+     const newLabelLayer = creatLabelLayer(map, canvas, AMap, AMap, data);
+     labelLayer.current = newLabelLayer;
+ 
+     Message.success({ 
+       content: `${t(Strings.map_loading_complte1)}${recordsGeo.length}${t(Strings.map_loading_complte2)}`,
+       messageKey: "loadingMark", 
+       duration: 3 
+     });
+  }
+
+  // 文本地址请求之后
   useEffect(() => {
     if(!plugins || !data) {
       return;
     }
-   
-    if(addressType === 'text' && isSetTextCache) {
-      setIsSetTextCache(false);
-    }
-
-    // 创建icon图层
-    const recordsGeo = getGeoJson(data);
-    const newIconLayer = creatIconLayer(map, plugins, expandRecord, markerIcon, infoWindow, recordsGeo);
-    const loca = new plugins.Loca.Container({
-      map,
-    });
-    loca.add(newIconLayer);
-    setLocalContainer(loca);
-    setIconlayer(newIconLayer);
-
-    // 创建label图层
-    const newLabelLayer = creatLabelLayer(map, canvas, AMap, AMap, data);
-    labelLayer.current = newLabelLayer;
-
-    Message.success({ 
-      content: `${t(Strings.map_loading_complte1)}${recordsGeo.length}${t(Strings.map_loading_complte2)}`,
-      messageKey: "loadingMark", 
-      duration: 3 
-    });
-   
+    console.log(data);
+    setIsSetTextCache(false);
+    setTextCoordinateRecordsCache(data);
   }, [data]);
 
-  
+  useEffect(() => {
+    if(!plugins || !textCoordinateRecordsCache) {
+      return;
+    }
+    console.log('textCoordinateRecordsCache--->', textCoordinateRecordsCache);
+    creatLayer(plugins, textCoordinateRecordsCache);
+  }, [textCoordinateRecordsCache]);
  
   const backLocation = (plugins) => {
     plugins.citySearch.getLocalCity(function (status, result) {

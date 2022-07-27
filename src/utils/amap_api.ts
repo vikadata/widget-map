@@ -105,109 +105,54 @@ export const creatTransfer = (plugins: IPlugins | undefined,pointA, pointB) => {
 
 
 // 增量更新 markAddressRecord
-export const updateMardkAddressRecord = (simpleRecords, markersLayer) => {
-  const markAddressRecordsCopy = [...markersLayer];
-      let newRecordIndex : number[] = [];
-      let newRecordIsAdd : boolean[] = [];
-     
-      markAddressRecordsCopy.forEach((mark, index, arr ) => {
-        let isExist = false;
-        simpleRecords.forEach((record, recordIndex)=> {
-            if(mark.id === record.id ) {
-              // 已经出现了不用删除不用新增
-              isExist = true;
-              const newIndex = newRecordIndex.indexOf(recordIndex);
-              if(newIndex > - 1) {
-                newRecordIsAdd[newIndex] = false;
-              } else {
-                newRecordIndex.push(recordIndex);
-                newRecordIsAdd.push(false);
-              }
+export const comparedMapRecords = (mapRecords: ISimpleRecords[], mapRecordsCache: ISimpleRecords[]) => {
 
-              // 如果ID相等 检查地址是否变更
-              if(mark.address === record.address) {
-                // 如果没有变更
-                arr[index] = {
-                  ...mark,
-                  isAddressUpdate: false,
-                };
-              } else {
-                console.log('地址发生了变更');
-                // 如果变更了
-                arr[index] = {
-                  ...mark,
-                  address: record.address,
-                  isAddressUpdate: true,
-                };
-              }
-            } else {
-                if(!newRecordIndex.includes(recordIndex)) {
-                  newRecordIndex.push(recordIndex);
-                  newRecordIsAdd.push(true);
-                }
-            }
-        });
-        // 如果找不到了删除这个
-        if(!isExist) {
-          arr.splice(index,1);
-        }
+  const mapRecordsCacheObj = {};
+  mapRecordsCache.forEach(mapRecord => {
+    mapRecordsCacheObj[`${mapRecord.id}-${mapRecord.address}`] = mapRecord;
+  });
 
-      }, markAddressRecordsCopy);
-
-      // 获取需要新增的信息
-      const addreRcored = newRecordIndex.map((item,index) => {
-          if(newRecordIsAdd[index]) {
-            return simpleRecords[item];
-          } else {
-            return null;
-          }
-      }).filter(Boolean);
-
-      return markAddressRecordsCopy.concat(addreRcored);
+  return mapRecords.map(mapRecord => {
+    if(mapRecordsCacheObj[`${mapRecord.id}-${mapRecord.address}`]) {
+      return {
+        ...mapRecordsCacheObj[`${mapRecord.id}-${mapRecord.address}`],
+        isAddressUpdate: false,
+      }
+    } else {
+      return {
+        ...mapRecord,
+        isAddressUpdate: true
+      }
+    }
+  });
 }
 
 
 
 // 地址处理
 export const getCoordinateRecords = async (
-    plugins: IPlugins | undefined, 
-    addressType, 
+    plugins: IPlugins | undefined,
     textCoordinateRecordsCache, 
     mapRecords: ISimpleRecords[]
   ) => {
  
   return new Promise<ISimpleRecords[]>(async (resolve, reject) => {
-    if(addressType === 'text') {
-   
-      if(textCoordinateRecordsCache && textCoordinateRecordsCache.length < 0) { 
-        resolve([]);
-      }
-      const asyncRecords = textCoordinateRecordsCache.map(async record => {
-        if(record.isAddressUpdate) {
-          return getRcoresLocationAsync(plugins, record);
-        } else {
-          return record
-        }
-      });
-      const res  = await Promise.all(asyncRecords) as ISimpleRecords[];
-      resolve(res);
-    } else if(addressType === 'latlng') {
-      const res = mapRecords.map(record => {
-        const location = record.address ? record.address.split(',') : '';
-        if(!location || location.length !== 2 || isNaN(parseFloat(location[0])) ||  isNaN(parseFloat(location[0]))) {
-          return null;
-        } else {
-          return {
-            ...record,
-            location: [
-                parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
-            ]
-          }
-        }
-      }).filter(Boolean) as ISimpleRecords[];
-     
-      resolve(res);
+    let newRecords
+    if(textCoordinateRecordsCache && textCoordinateRecordsCache.length === 0) { 
+      newRecords = mapRecords
+    } else {
+      newRecords = comparedMapRecords(mapRecords, textCoordinateRecordsCache);
     }
+    const asyncRecords = newRecords.map(async record => {
+      if(record.isAddressUpdate) {
+        return getRcoresLocationAsync(plugins, record);
+      } else {
+        return record
+      }
+    });
+    const res  = await Promise.all(asyncRecords) as ISimpleRecords[];
+    resolve(res);
+    
   });
 }
 

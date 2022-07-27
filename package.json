@@ -33,6 +33,7 @@
     "@vikadata/icons": "^0.0.1",
     "@vikadata/widget-sdk": "0.0.7",
     "ahooks": "^3.1.13",
+    "antd": "^4.22.1",
     "css-loader": "^6.7.1",
     "less": "^4.1.2",
     "less-loader": "^11.0.0",

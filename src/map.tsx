@@ -144,7 +144,6 @@ export const MapComponent: React.FC = () => {
     if(!map.current) {
       return;
     }
-    console.log('主题切换', map.current);
     if(theme === "light") {
       map.current.setMapStyle('amap://styles/3b1fbc19e1b07d4fd0c21e8e09225605');
     } else {

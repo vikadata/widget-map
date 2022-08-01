@@ -107,6 +107,14 @@
     "cancel": {
       "zh_CN": "取消",
       "en_US": "Cancel"
+    },
+    "run_load_text_icon": {
+      "zh_CN": "检测到表格内的数据有更新，你可以选择重新加载地图",
+      "en_US": "There are updates in the datasheet, and you can choose to reload the map."
+    },
+    "reload": {
+      "zh_CN": "重新加载",
+      "en_US": "Reload"
     }
   }
 }

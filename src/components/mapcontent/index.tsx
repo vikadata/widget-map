@@ -74,9 +74,9 @@ export const MapContent: React.FC<IMapContentProps> = props => {
         anchor:'center',
       } : null;
   }, [AMap, lodingStatus]);
-  
+  const infoWindow = useRef();
   // 默认信息弹窗配置
-  const infoWindow =  useMemo(() => { 
+  infoWindow.current =  useMemo(() => { 
     return lodingStatus ? new AMap.InfoWindow({
       content: '<div class="infowindowContent" ></div>',  //传入 dom 对象，或者 html 字符串
       offset: [0, -32],
@@ -250,7 +250,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   const creatLayer = (plugins, data) => {
      // 创建icon图层
      const recordsGeo = getGeoJson(data);
-     const newIconLayer = creatIconLayer(map, plugins, expandRecord, markerIcon, infoWindow, recordsGeo);
+     const newIconLayer = creatIconLayer(map, plugins, expandRecord, markerIcon, infoWindow.current, recordsGeo);
      const loca = new plugins.Loca.Container({
        map,
      });

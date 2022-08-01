@@ -2,7 +2,7 @@
 export const  creatIconLayer = (map, plugins, expandRecord, markerIcon, infoWindow, geoRecords) => {
 
   const iconLayer = new plugins.Loca.IconLayer({
-    zIndex: 50,
+    zIndex: 90,
     opacity: 1,
     visible: true,
   });
@@ -36,8 +36,11 @@ export const  creatIconLayer = (map, plugins, expandRecord, markerIcon, infoWind
   // 显示信息弹窗
   map.on('mousemove', (e) => {
     const feat = iconLayer.queryFeature(e.pixel.toArray());
+  
     if(feat) {
-      infoWindow.setContent(`<div class="infowindowContent" ><h1>${feat.properties.title}</h1><p>${feat.properties.address}</p></div>`)
+      const title = feat.properties.title;
+      const titleContent = title.length < 30 ? title : title.substring(0, 30) + '...';
+      infoWindow.setContent(`<div class="infowindowContent" ><h1>${titleContent}</h1><p>${feat.properties.address}</p></div>`)
       infoWindow.open(map, feat.coordinates);
     } else {
       infoWindow.close(map);

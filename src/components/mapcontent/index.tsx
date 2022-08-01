@@ -185,7 +185,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
  
 
   useEffect(() => {
-    if(!plugins) {
+    if(!plugins || !addressFieldId) {
       return;
     }
 
@@ -254,7 +254,8 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   // 配置切换更新
   const { data, run : getTextCoordinate} = useRequest(mapRecords => getCoordinateRecords(plugins, mapRecords), {
     debounceWait: 500,
-    manual: true
+    manual: true,
+    retryCount: 3,
   });
  
 
@@ -270,7 +271,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
      setIconlayer(newIconLayer);
  
      // 创建label图层
-     const newLabelLayer = creatLabelLayer(map, canvas, AMap, AMap, data);
+     const newLabelLayer = creatLabelLayer(map, canvas, AMap, isShowLabel, data);
      labelLayer.current = newLabelLayer;
  
      Message.success({ 
@@ -282,15 +283,16 @@ export const MapContent: React.FC<IMapContentProps> = props => {
 
   // 文本地址请求之后
   useEffect(() => {
+  
     if(!plugins || !data) {
       return;
     }
-    console.log(data);
+   
     setIsSetTextCache(false);
     if(isRecordDataUpdate) {
       setTextCoordinateRecordsCache(data);
     } else {
-      creatLayer(plugins, textCoordinateRecordsCache);
+      creatLayer(plugins, data);
     }
   }, [data]);
 
@@ -298,7 +300,6 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     if(!plugins || !textCoordinateRecordsCache) {
       return;
     }
-    console.log('textCoordinateRecordsCache--->', textCoordinateRecordsCache);
     creatLayer(plugins, textCoordinateRecordsCache);
   }, [textCoordinateRecordsCache]);
  

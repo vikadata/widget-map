@@ -43,13 +43,14 @@ export const getRcoresLocationAsync = (plugins: IPlugins | undefined, records: I
     if(address &&  address !== '') {
       plugins.geocoder.getLocation(address, function(status, result) {
         if (status === 'complete' && result.info === 'OK') {
-          
+          console.log('请求结果', result, status);
           const { lng, lat} = result.geocodes[0].location;
           resolve({
             ...records,
             location: [lng, lat]
           });
         } else {
+          console.log('请求结果', result, status);
           resolve({
             ...records,
             location: null
@@ -57,6 +58,7 @@ export const getRcoresLocationAsync = (plugins: IPlugins | undefined, records: I
         }
       });
     } else {
+      console.log('请求结果null');
         resolve({
           ...records,
           location: null
@@ -73,10 +75,10 @@ export const getLocationArrayAsync = (plugins: IPlugins | undefined, records: an
  
   return new Promise((resolve, reject) => {
     plugins.geocoder.getLocation(records, function(status, result) {
-      console.log('records--->', records);
+   
       if (status === 'complete' && result.info === 'OK') {
         // const { lng, lat} = result.geocodes[0].location;
-        console.log('result--->', result);
+       
         resolve(result.geocodes);
       } else {
         resolve([]);
@@ -145,17 +147,11 @@ export const getCoordinateRecords = async (
   ) => {
  
   return new Promise<ISimpleRecords[]>(async (resolve, reject) => {
-    // let newRecords
-    // if(textCoordinateRecordsCache && textCoordinateRecordsCache.length === 0) { 
-    //   newRecords = mapRecords
-    // } else {
-    //  const { newMapRecords, isRecordDataUpdate  } = comparedMapRecords(mapRecords, textCoordinateRecordsCache);
-    // }
     const asyncRecords = mapRecords.map(async record => {
       if(record.isAddressUpdate) {
         return getRcoresLocationAsync(plugins, record);
       } else {
-        return record
+        return new Promise<ISimpleRecords>(resolve => resolve(record));
       }
     });
     const res  = await Promise.all(asyncRecords) as ISimpleRecords[];

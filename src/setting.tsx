@@ -30,7 +30,7 @@ export const Setting: React.FC = () => {
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-  const [mapToken, setToken] = useCloudStorage<IMapToken>('mapToken');
+  const [, setToken] = useCloudStorage<IMapToken>('mapToken');
 
   const lang = getLanguage().replace('-', '_');
 

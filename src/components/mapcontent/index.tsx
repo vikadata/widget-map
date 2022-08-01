@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
-import { getLocationAsync, getRcoresLocationAsync, updateMardkAddressRecord } from '../../utils/common';
+import { getLocationAsync, getCoordinateRecords } from '../../utils/amap_api';
 import { useDebounce, useRequest } from 'ahooks';
-import { TextInput, Message, Tooltip } from '@vikadata/components';
+import { TextInput, Message, Tooltip, Button } from '@vikadata/components';
 import styles from './style.module.less';
-import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined } from '@vikadata/icons';
-
+import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined, DefaultFilled, CloseLargeOutlined} from '@vikadata/icons';
+import { creatIconLayer, creatLabelLayer } from '../../utils/common';
 import { useAsyncEffect } from '../../utils/hooks';
+import { getGeoJson } from '../../utils/tools';
 import markerIcon from '../../static/img/mark.svg';
 import markerSelectedIcon from '../../static/img/markSelect.svg';
 import { IPlugins, ISimpleRecords } from '../../interface/map';
 import "@amap/amap-jsapi-types";
 import { Strings, t } from '../../i18n';
 import { slice } from 'lodash';
+import { message as messageAntd } from 'antd';
 
 interface IMapContentProps {
   lodingStatus: boolean,
@@ -60,9 +62,9 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   // 可视化容器
   const [localContainer, setLocalContainer] = useState<any>();
 
-  const [textLocationCache, setTextLocationCache ] = useCloudStorage<ISimpleRecords[]>('textLocationCache', []);
+  const [textCoordinateRecordsCache, setTextCoordinateRecordsCache ] = useCloudStorage<ISimpleRecords[]>('textCoordinateRecordsCache', []);
   
-
+  const [isSetTextCache, setIsSetTextCache] = useCloudStorage<boolean>('isSetTextCache', false);
 
   // 默认Icon 配置
   const iconDefaultConfig = useMemo(() => {
@@ -72,9 +74,9 @@ export const MapContent: React.FC<IMapContentProps> = props => {
         anchor:'center',
       } : null;
   }, [AMap, lodingStatus]);
-  
+  const infoWindow = useRef();
   // 默认信息弹窗配置
-  const infoWindow =  useMemo(() => { 
+  infoWindow.current =  useMemo(() => { 
     return lodingStatus ? new AMap.InfoWindow({
       content: '<div class="infowindowContent" ></div>',  //传入 dom 对象，或者 html 字符串
       offset: [0, -32],
@@ -87,7 +89,6 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   
   
   const canvas = document.createElement('canvas');
-  
 
   // 根据选中信息设置中心坐标
   useAsyncEffect(async () => {
@@ -161,10 +162,25 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       map.setCenter([ e.poi.location.lng, e.poi.location.lat]);
   };
 
-  // 地址处理
-  async function dealAddress(plugins: IPlugins | undefined, records: any) {
-    
-    
+  const updateTextCache = (mapRecords: ISimpleRecords[]) => {
+    Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
+    getTextCoordinate(mapRecords);
+    setIsSetTextCache(true);
+  }
+
+  useEffect(() => {
+    if(isSetTextCache) {
+      messageAntd.destroy();
+    }
+  }, [isSetTextCache]);
+
+  const closeMessage = () => {
+    messageAntd.destroy();
+  }
+
+ 
+
+  useEffect(() => {
     if(!plugins) {
       return;
     }
@@ -177,10 +193,10 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     if(labelLayer.current) {
       labelLayer.current.destroy();
       map.remove(labelLayer.current);
-    } 
+    }
 
-    Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
-    const simpleRecords: ISimpleRecords[] = slice(records, 0 , 2000).map(record => {
+     // 限制加载标点数量
+    const mapRecords =  slice(records, 0 , 2000).map(record => {
       return {
         title: record.getCellValueString(titleFieldID) || '',
         address: record.getCellValueString(addressFieldId) || '',
@@ -188,211 +204,90 @@ export const MapContent: React.FC<IMapContentProps> = props => {
         isAddressUpdate: true
       }
     });
-  
-    return new Promise<ISimpleRecords[]>(async (resolve, reject) => {
-      if(addressType === 'text') {
-        let newRecords = simpleRecords;
-        if(textLocationCache && textLocationCache.length > 0) { 
-          newRecords = updateMardkAddressRecord(simpleRecords, textLocationCache);
-        }
-        const asyncRecords = newRecords.map(async record => {
-          if(record.isAddressUpdate) {
-            return getRcoresLocationAsync(plugins, record);
-          } else {
-            return record
-          }
-        });
-        const res  = await Promise.all(asyncRecords) as ISimpleRecords[];
-        resolve(res);
-      } else if(addressType === 'latlng') {
-        const res = simpleRecords.map(record => {
-          const location = record.address ? record.address.split(',') : '';
-          if(!location || location.length !== 2 || isNaN(parseFloat(location[0])) ||  isNaN(parseFloat(location[0]))) {
-            return null;
-          } else {
-            return {
-              ...record,
-              location: [
-                  parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
-              ]
-            }
-          }
-        }).filter(Boolean) as ISimpleRecords[];
-       
-        resolve(res);
-      }
-    });
+
     
-  }
+    if(addressType === 'text') {
+      messageAntd.info({
+        icon: <DefaultFilled size={16} />,
+        content: ( 
+          <div className={styles.antdMessageContent}>
+            <span>{t(Strings.run_load_text_icon)}</span>
+            <span className={styles.antdMessageButton} onClick={() => updateTextCache(mapRecords)} >重新加载</span>
+            <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10}/>
+          </div>
+        ),
+        key: 'loadTextDataMessage',
+        duration: 0
+      });
+    } else {
+      Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
+      const res = mapRecords.map(record => {
+        const location = record.address ? record.address.split(',') : '';
+        if(!location || location.length !== 2 || isNaN(parseFloat(location[0])) ||  isNaN(parseFloat(location[0]))) {
+          return null;
+        } else {
+          return {
+            ...record,
+            location: [
+                parseFloat(location[0]).toFixed(6), parseFloat(location[1]).toFixed(6)
+            ]
+          }
+        }
+      }).filter(Boolean) as ISimpleRecords[];
+      creatLayer(plugins, res);
+    }
+   
+
+  }, [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus]);
 
   // 配置切换更新
-  const { data } = useRequest(() => dealAddress(plugins, records), {
+  const { data, run : getTextCoordinate} = useRequest(mapRecords => getCoordinateRecords(plugins, textCoordinateRecordsCache, mapRecords), {
     debounceWait: 500,
-    refreshDeps: [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus]
+    manual: true
   });
  
 
+  const creatLayer = (plugins, data) => {
+     // 创建icon图层
+     const recordsGeo = getGeoJson(data);
+     const newIconLayer = creatIconLayer(map, plugins, expandRecord, markerIcon, infoWindow.current, recordsGeo);
+     const loca = new plugins.Loca.Container({
+       map,
+     });
+     loca.add(newIconLayer);
+     setLocalContainer(loca);
+     setIconlayer(newIconLayer);
+ 
+     // 创建label图层
+     const newLabelLayer = creatLabelLayer(map, canvas, AMap, AMap, data);
+     labelLayer.current = newLabelLayer;
+ 
+     Message.success({ 
+       content: `${t(Strings.map_loading_complte1)}${recordsGeo.length}${t(Strings.map_loading_complte2)}`,
+       messageKey: "loadingMark", 
+       duration: 3 
+     });
+  }
+
+  // 文本地址请求之后
   useEffect(() => {
     if(!plugins || !data) {
       return;
     }
-   
-
-    if(addressType === 'text') {
-      setTextLocationCache(data);
-    }
-    const recordsGeo = formateGeo(data);
-    const newIconLayer = creatIconLayer(plugins, recordsGeo);
-    const loca = new plugins.Loca.Container({
-      map,
-    });
-    loca.add(newIconLayer);
-    setLocalContainer(loca);
-    setIconlayer(newIconLayer);
-    Message.success({ content: `${t(Strings.map_loading_complte1)}${recordsGeo.length}${t(Strings.map_loading_complte2)}`, messageKey: "loadingMark", duration: 3 });
-    const newLabelLayer = creatLabelLayer(data);
-    
-    labelLayer.current = newLabelLayer;
+    console.log(data);
+    setIsSetTextCache(false);
+    setTextCoordinateRecordsCache(data);
   }, [data]);
 
-
-
-  function formateGeo(locationRecords) {
-    return locationRecords.map(record => {
-        if(!record.location) {
-          return null
-        }
-        return {
-          "type": "Feature",
-          "properties": {
-              "title": record.title,
-              "id": record.id,
-              "address": record.address
-          },
-          "geometry": {
-              "type": "Point",
-              "coordinates": record.location
-          }
-        }
-    }).filter(Boolean);
-  }
-
-  // 创建icon标点图层
-  function creatIconLayer(plugins, geoRecords) {
-    
-    const iconLayer = new plugins.Loca.IconLayer({
-      zIndex: 50,
-      opacity: 1,
-      visible: true,
-    });
-    
-    const geo = new plugins.Loca.GeoJSONSource({
-      data: {
-          "type": "FeatureCollection",
-          "features": geoRecords,
-      },
-    });
-    
-    iconLayer.setSource(geo);
-
-    iconLayer.setStyle({
-      unit: 'px',
-      icon: markerIcon,
-      iconSize: [30,30],
-      rotation: 0,
-      offset: [0,15],
-    });
-
-  
-    //点击展开弹窗
-    map.on('click', (e) => {
-        const feat = iconLayer.queryFeature(e.pixel.toArray());
-        if (feat) {
-            expandRecord({recordIds: [feat.properties.id]});
-        }
-    });
-
-    // 显示信息弹窗
-    map.on('mousemove', (e) => {
-      const feat = iconLayer.queryFeature(e.pixel.toArray());
-      if(feat) {
-        infoWindow.setContent(`<div class="infowindowContent" ><h1>${feat.properties.title}</h1><p>${feat.properties.address}</p></div>`)
-        infoWindow.open(map, feat.coordinates);
-      } else {
-        infoWindow.close(map);
-      }
-    });
-
-    return iconLayer;
-  }
-  
-  function creatLabelLayer(locationRecords) {
-    
-    canvas.id = 'labelCanvas';
-    const customLabelLayer = new AMap.CustomLayer(canvas, {
-      zooms: [3, 20],
-      zIndex: 12,
-    });
-    
-
-		const onRender = function(){
-      
-        // customLabelLayer.hide();
-		    const retina = AMap.Browser.retina;
-        const size = map.getSize();//resize
-        let width = size.width;
-        let height = size.height;
-        canvas.style.width = width+'px'
-        canvas.style.height = height+'px'
-        if(retina){//高清适配
-            width*=2;
-            height*=2;
-        }
-        canvas.width = width;
-        canvas.height = height;//清除画布
-		    const ctx = canvas.getContext("2d");
-        if(!ctx) {
-          return;
-        }
-    		
-    		ctx.strokeStyle = '#DCDFE5';
-    		ctx.beginPath();
-        ctx.font = "14px PingFang SC";
-        
-        locationRecords.forEach(locationRecord => {
-          const center = locationRecord.location;
-          if(!center) {
-            return
-          }
-    			let pos = map.lngLatToContainer(center);
-          const title = locationRecord.title.length < 9 ? locationRecord.title : locationRecord.title.substring(0,7) + '...';
-    			const text = ctx.measureText(title);
-    			if(retina){
-    			    pos = pos.multiplyBy(2);
-    			}
-    			ctx.moveTo(pos.x, pos.y);
-          ctx.fillStyle = '#fff';
-    		  ctx.fillRect(pos.x + 20, pos.y - 30, text.width + 16, 32);
-          ctx.fillStyle = "#2E2E2E";
-          ctx.fillText(title, pos.x + 28, pos.y - 10, 164);
-        });
-		 
-    		ctx.lineWidth = retina? 6 : 3;
-    		ctx.closePath();
-    		ctx.stroke();
-    		ctx.fill();
-		}
-		customLabelLayer.render = onRender;
-		customLabelLayer.setMap(map);
-    if(isShowLabel) {
-      customLabelLayer.setOpacity(1);
-    } else {
-      customLabelLayer.setOpacity(0);
+  useEffect(() => {
+    if(!plugins || !textCoordinateRecordsCache) {
+      return;
     }
-    return customLabelLayer;
-  }
+    console.log('textCoordinateRecordsCache--->', textCoordinateRecordsCache);
+    creatLayer(plugins, textCoordinateRecordsCache);
+  }, [textCoordinateRecordsCache]);
  
-  function backLocation(plugins) {
+  const backLocation = (plugins) => {
     plugins.citySearch.getLocalCity(function (status, result) {
       if (status === 'complete' && result.info === 'OK') {
         // 查询成功，result即为当前所在城市信息

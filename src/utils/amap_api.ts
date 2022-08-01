@@ -116,6 +116,7 @@ export const comparedMapRecords = (mapRecords: ISimpleRecords[], mapRecordsCache
     if(mapRecordsCacheObj[`${mapRecord.id}-${mapRecord.address}`]) {
       return {
         ...mapRecordsCacheObj[`${mapRecord.id}-${mapRecord.address}`],
+        title: mapRecord.title,
         isAddressUpdate: false,
       }
     } else {

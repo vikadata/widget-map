@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
-import { getLocationAsync, getCoordinateRecords } from '../../utils/amap_api';
+import { getLocationAsync, getCoordinateRecords, comparedMapRecords } from '../../utils/amap_api';
 import { useDebounce, useRequest } from 'ahooks';
 import { TextInput, Message, Tooltip, Button } from '@vikadata/components';
 import styles from './style.module.less';
@@ -65,6 +65,9 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   const [textCoordinateRecordsCache, setTextCoordinateRecordsCache ] = useCloudStorage<ISimpleRecords[]>('textCoordinateRecordsCache', []);
   
   const [isSetTextCache, setIsSetTextCache] = useCloudStorage<boolean>('isSetTextCache', false);
+
+
+  const [isRecordDataUpdate, setIsRecordDataUpdate] = useState<boolean>(false);
 
   // 默认Icon 配置
   const iconDefaultConfig = useMemo(() => {
@@ -166,6 +169,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
     getTextCoordinate(mapRecords);
     setIsSetTextCache(true);
+    
   }
 
   useEffect(() => {
@@ -207,18 +211,25 @@ export const MapContent: React.FC<IMapContentProps> = props => {
 
     
     if(addressType === 'text') {
-      messageAntd.info({
-        icon: <DefaultFilled size={16} />,
-        content: ( 
-          <div className={styles.antdMessageContent}>
-            <span>{t(Strings.run_load_text_icon)}</span>
-            <span className={styles.antdMessageButton} onClick={() => updateTextCache(mapRecords)} >重新加载</span>
-            <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10}/>
-          </div>
-        ),
-        key: 'loadTextDataMessage',
-        duration: 0
-      });
+
+      const { newMapRecords, isRecordDataUpdate } = comparedMapRecords(mapRecords, textCoordinateRecordsCache);
+      setIsRecordDataUpdate(isRecordDataUpdate as boolean);
+      if(isRecordDataUpdate) {
+        messageAntd.info({
+          icon: <DefaultFilled size={16} />,
+          content: ( 
+            <div className={styles.antdMessageContent}>
+              <span>{t(Strings.run_load_text_icon)}</span>
+              <span className={styles.antdMessageButton} onClick={() => updateTextCache(newMapRecords)} >重新加载</span>
+              <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10}/>
+            </div>
+          ),
+          key: 'loadTextDataMessage',
+          duration: 0
+        });
+      } else {
+        updateTextCache(newMapRecords);
+      }
     } else {
       Message.success({ content: t(Strings.map_loading), messageKey: "loadingMark", duration: 0 });
       const res = mapRecords.map(record => {
@@ -241,7 +252,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   }, [records, plugins, addressFieldId, addressType, titleFieldID, lodingStatus]);
 
   // 配置切换更新
-  const { data, run : getTextCoordinate} = useRequest(mapRecords => getCoordinateRecords(plugins, textCoordinateRecordsCache, mapRecords), {
+  const { data, run : getTextCoordinate} = useRequest(mapRecords => getCoordinateRecords(plugins, mapRecords), {
     debounceWait: 500,
     manual: true
   });
@@ -276,7 +287,11 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     }
     console.log(data);
     setIsSetTextCache(false);
-    setTextCoordinateRecordsCache(data);
+    if(isRecordDataUpdate) {
+      setTextCoordinateRecordsCache(data);
+    } else {
+      creatLayer(plugins, textCoordinateRecordsCache);
+    }
   }, [data]);
 
   useEffect(() => {

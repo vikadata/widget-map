@@ -108,11 +108,12 @@ export const creatTransfer = (plugins: IPlugins | undefined,pointA, pointB) => {
 export const comparedMapRecords = (mapRecords: ISimpleRecords[], mapRecordsCache: ISimpleRecords[]) => {
 
   const mapRecordsCacheObj = {};
+  let isRecordDataUpdate = false;
   mapRecordsCache.forEach(mapRecord => {
     mapRecordsCacheObj[`${mapRecord.id}-${mapRecord.address}`] = mapRecord;
   });
-
-  return mapRecords.map(mapRecord => {
+  
+  const newMapRecords = mapRecords.map(mapRecord => {
     if(mapRecordsCacheObj[`${mapRecord.id}-${mapRecord.address}`]) {
       return {
         ...mapRecordsCacheObj[`${mapRecord.id}-${mapRecord.address}`],
@@ -120,12 +121,18 @@ export const comparedMapRecords = (mapRecords: ISimpleRecords[], mapRecordsCache
         isAddressUpdate: false,
       }
     } else {
+      isRecordDataUpdate = true;
       return {
         ...mapRecord,
         isAddressUpdate: true
       }
     }
   });
+
+  return {
+    newMapRecords,
+    isRecordDataUpdate
+  }
 }
 
 
@@ -133,18 +140,18 @@ export const comparedMapRecords = (mapRecords: ISimpleRecords[], mapRecordsCache
 // 地址处理
 export const getCoordinateRecords = async (
     plugins: IPlugins | undefined,
-    textCoordinateRecordsCache, 
+    // textCoordinateRecordsCache, 
     mapRecords: ISimpleRecords[]
   ) => {
  
   return new Promise<ISimpleRecords[]>(async (resolve, reject) => {
-    let newRecords
-    if(textCoordinateRecordsCache && textCoordinateRecordsCache.length === 0) { 
-      newRecords = mapRecords
-    } else {
-      newRecords = comparedMapRecords(mapRecords, textCoordinateRecordsCache);
-    }
-    const asyncRecords = newRecords.map(async record => {
+    // let newRecords
+    // if(textCoordinateRecordsCache && textCoordinateRecordsCache.length === 0) { 
+    //   newRecords = mapRecords
+    // } else {
+    //  const { newMapRecords, isRecordDataUpdate  } = comparedMapRecords(mapRecords, textCoordinateRecordsCache);
+    // }
+    const asyncRecords = mapRecords.map(async record => {
       if(record.isAddressUpdate) {
         return getRcoresLocationAsync(plugins, record);
       } else {

@@ -270,7 +270,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
      setIconlayer(newIconLayer);
  
      // 创建label图层
-     const newLabelLayer = creatLabelLayer(map, canvas, AMap, AMap, data);
+     const newLabelLayer = creatLabelLayer(map, canvas, AMap, isShowLabel, data);
      labelLayer.current = newLabelLayer;
  
      Message.success({ 

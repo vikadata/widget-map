@@ -290,7 +290,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     if(isRecordDataUpdate) {
       setTextCoordinateRecordsCache(data);
     } else {
-      creatLayer(plugins, textCoordinateRecordsCache);
+      creatLayer(plugins, data);
     }
   }, [data]);
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
 import { getLocationAsync, getCoordinateRecords, comparedMapRecords } from '../../utils/amap_api';
 import { useDebounce, useRequest } from 'ahooks';
-import { TextInput, Message, Tooltip, Button } from '@vikadata/components';
+import { TextInput, Message, Tooltip } from '@vikadata/components';
 import styles from './style.module.less';
 import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined, DefaultFilled, CloseLargeOutlined} from '@vikadata/icons';
 import { creatIconLayer, creatLabelLayer } from '../../utils/common';
@@ -221,7 +221,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
             <div className={styles.antdMessageContent}>
               <span>{t(Strings.run_load_text_icon)}</span>
               <span className={styles.antdMessageButton} onClick={() => updateTextCache(newMapRecords)} >重新加载</span>
-              <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10}/>
+              <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10} />
             </div>
           ),
           key: 'loadTextDataMessage',

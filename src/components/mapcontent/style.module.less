@@ -195,14 +195,27 @@
     top: 80px;
     left: 50%;
     transform: translateX(-50%);
-    background: #E9E5FF;
     padding: 10px 17px;
     border-radius: 4px;
     margin-left: -100px;
+    box-shadow: none!important;
   }
   .ant-message-custom-content {
+    box-shadow: none!important;
+    padding: 8px 17px!important;
+    span {
+      color:  var(--textCommonPrimary)!important;
+    }
+  }
+  .ant-message-info {
     display: flex;
     align-items: center;
+    background: #E9E5FF!important;
+    box-shadow: none!important;
+    div {
+      display: flex;
+      align-items: center;
+    }
   }
 }
 
@@ -213,22 +226,25 @@
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
-  color: #2E2E2E;
+  color: #2E2E2E!important;
   min-width: 490px;
   .antdMessageButton {
     margin-left: 50px;
-    background: #7B67EE;
+    background: #7B67EE!important;
     border-radius: 4px;
     padding: 3px 12px;
     font-style: normal;
     font-weight: 400;
     font-size: 12px;
     line-height: 18px;
-    color: #FFFFFF;
+    color: #FFFFFF!important;
     cursor: pointer;
   }
   .antdMessageCloseButton {
-    margin-left: 20px;
+    margin-left: 42px;
     cursor: pointer;
+    fill: var(--textCommonPrimary)!important;
+    width: 10px!important;
+    height: 10px!important;
   }
 }

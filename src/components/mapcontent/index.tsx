@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useCloudStorage, useRecords, useExpandRecord, useActiveCell, useRecord, useFields, useActiveViewId, useViewIds } from '@vikadata/widget-sdk';
 import { getLocationAsync, getCoordinateRecords, comparedMapRecords } from '../../utils/amap_api';
 import { useDebounce, useRequest } from 'ahooks';
-import { TextInput, Message, Tooltip, Button } from '@vikadata/components';
+import { TextInput, Message, Tooltip } from '@vikadata/components';
 import styles from './style.module.less';
 import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined, DefaultFilled, CloseLargeOutlined} from '@vikadata/icons';
 import { creatIconLayer, creatLabelLayer } from '../../utils/common';
@@ -185,7 +185,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
  
 
   useEffect(() => {
-    if(!plugins) {
+    if(!plugins || !addressFieldId) {
       return;
     }
 
@@ -221,7 +221,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
             <div className={styles.antdMessageContent}>
               <span>{t(Strings.run_load_text_icon)}</span>
               <span className={styles.antdMessageButton} onClick={() => updateTextCache(newMapRecords)} >重新加载</span>
-              <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10}/>
+              <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10} />
             </div>
           ),
           key: 'loadTextDataMessage',
@@ -254,7 +254,8 @@ export const MapContent: React.FC<IMapContentProps> = props => {
   // 配置切换更新
   const { data, run : getTextCoordinate} = useRequest(mapRecords => getCoordinateRecords(plugins, mapRecords), {
     debounceWait: 500,
-    manual: true
+    manual: true,
+    retryCount: 3,
   });
  
 
@@ -270,7 +271,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
      setIconlayer(newIconLayer);
  
      // 创建label图层
-     const newLabelLayer = creatLabelLayer(map, canvas, AMap, AMap, data);
+     const newLabelLayer = creatLabelLayer(map, canvas, AMap, isShowLabel, data);
      labelLayer.current = newLabelLayer;
  
      Message.success({ 
@@ -282,15 +283,16 @@ export const MapContent: React.FC<IMapContentProps> = props => {
 
   // 文本地址请求之后
   useEffect(() => {
+  
     if(!plugins || !data) {
       return;
     }
-    console.log(data);
+   
     setIsSetTextCache(false);
     if(isRecordDataUpdate) {
       setTextCoordinateRecordsCache(data);
     } else {
-      creatLayer(plugins, textCoordinateRecordsCache);
+      creatLayer(plugins, data);
     }
   }, [data]);
 
@@ -298,7 +300,6 @@ export const MapContent: React.FC<IMapContentProps> = props => {
     if(!plugins || !textCoordinateRecordsCache) {
       return;
     }
-    console.log('textCoordinateRecordsCache--->', textCoordinateRecordsCache);
     creatLayer(plugins, textCoordinateRecordsCache);
   }, [textCoordinateRecordsCache]);
  

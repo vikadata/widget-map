@@ -49,7 +49,7 @@ export const Setting: React.FC = () => {
 
   return isSettingOpened && meta.runtimeEnv == RuntimeEnv.Desktop ? (
     <div className={styles.settingContent}>
-      <h1>{t(Strings.map_setting)} <a href="https://vika.cn/help/intro-widget-location-map/" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
+      <h1>{t(Strings.map_setting)} <a href="https://help.vika.cn/docs/guide/intro-widget-location-map" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
       <div style={{ display: 'flex', height: '100%' }}>
         <div style={{ flexGrow: 1, overflow: 'auto'}}>
           <div className={styles.formItem}>
@@ -63,7 +63,7 @@ export const Setting: React.FC = () => {
                 onChange={option => setAddressFieldId(option.value)} 
               />
             </FormItem>
-            <FormItem label={t(Strings.switch_address_type)} help={t(Strings.formate_type_info)} link='https://vika.cn/help/intro-widget-location-map/#5-toc-title'>
+            <FormItem label={t(Strings.switch_address_type)} help={t(Strings.formate_type_info)} link='https://help.vika.cn/docs/guide/intro-widget-location-map/#switch_address_type'>
                 <RadioGroup name="btn-group-with-default" isBtn value={addressType} block onChange={(e, value) => {
                   setAddressType(value);
                 }}>

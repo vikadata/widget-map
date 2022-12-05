@@ -63,7 +63,7 @@ export const Setting: React.FC = () => {
                 onChange={option => setAddressFieldId(option.value)} 
               />
             </FormItem>
-            <FormItem label={t(Strings.switch_address_type)} help={t(Strings.formate_type_info)} link='https://help.vika.cn/docs/guide/intro-widget-location-map/#switch_address_type'>
+            <FormItem label={t(Strings.switch_address_type)} help={t(Strings.formate_type_info)} link='https://help.vika.cn/docs/guide/intro-widget-location-map/#switch-address-type'>
                 <RadioGroup name="btn-group-with-default" isBtn value={addressType} block onChange={(e, value) => {
                   setAddressType(value);
                 }}>

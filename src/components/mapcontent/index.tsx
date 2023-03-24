@@ -4,7 +4,7 @@ import { getLocationAsync, getCoordinateRecords, comparedMapRecords } from '../.
 import { useDebounce, useRequest } from 'ahooks';
 import { TextInput, Message, Tooltip } from '@vikadata/components';
 import styles from './style.module.less';
-import { SearchOutlined, ZoomOutOutlined, ZoomInOutlined, EyeNormalOutlined, EyeCloseOutlined, PositionOutlined, DefaultFilled, CloseLargeOutlined} from '@vikadata/icons';
+import { SearchOutlined, SubtractCircleOutlined, AddCircleOutlined, EyeOpenOutlined, EyeCloseOutlined, PositionOutlined, InfoCircleFilled, CloseOutlined} from '@vikadata/icons';
 import { creatIconLayer, creatLabelLayer } from '../../utils/common';
 import { useAsyncEffect } from '../../utils/hooks';
 import { getGeoJson } from '../../utils/tools';
@@ -216,12 +216,12 @@ export const MapContent: React.FC<IMapContentProps> = props => {
       setIsRecordDataUpdate(isRecordDataUpdate as boolean);
       if(isRecordDataUpdate) {
         messageAntd.info({
-          icon: <DefaultFilled size={16} />,
+          icon: <InfoCircleFilled size={16} />,
           content: ( 
             <div className={styles.antdMessageContent}>
               <span>{t(Strings.run_load_text_icon)}</span>
               <span className={styles.antdMessageButton} onClick={() => updateTextCache(newMapRecords)} >重新加载</span>
-              <CloseLargeOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10} />
+              <CloseOutlined onClick={() => closeMessage()} className={styles.antdMessageCloseButton} size={10} />
             </div>
           ),
           key: 'loadTextDataMessage',
@@ -336,7 +336,7 @@ export const MapContent: React.FC<IMapContentProps> = props => {
           </div>
           <Tooltip content={isShowLabel ? t(Strings.hide_address_name) : t(Strings.show_address_name)} placement='left'>
             <div className={styles.labelControl} >
-                { isShowLabel ? <EyeNormalOutlined size={16} className={styles.tooBarIcon} onClick={() => setIsShowLabel(!isShowLabel)}   /> : 
+                { isShowLabel ? <EyeOpenOutlined size={16} className={styles.tooBarIcon} onClick={() => setIsShowLabel(!isShowLabel)}   /> : 
                 <EyeCloseOutlined size={16} className={styles.tooBarIcon} onClick={() => setIsShowLabel(!isShowLabel)} /> }
             </div>
           </Tooltip>
@@ -346,8 +346,8 @@ export const MapContent: React.FC<IMapContentProps> = props => {
             </div>
           </Tooltip>
           <div className={styles.toolBar}>
-            <ZoomInOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />
-            <ZoomOutOutlined size={16} className={styles.tooBarIcon} onClick={() => { map.zoomOut() }} />
+            <AddCircleOutlined size={16} className={styles.tooBarIcon}  onClick={() => { map.zoomIn() }} />
+            <SubtractCircleOutlined size={16} className={styles.tooBarIcon} onClick={() => { map.zoomOut() }} />
           </div>
         </div>
     </div>

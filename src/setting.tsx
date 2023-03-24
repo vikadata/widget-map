@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSettingsButton, useCloudStorage, ViewPicker, FieldPicker, useActiveViewId, useViewIds, useFields, getLanguage, RuntimeEnv, useMeta } from '@vikadata/widget-sdk';
 import { RadioGroup, Radio, TextInput, Modal, Message, LinkButton } from '@vikadata/components';
 import styles from './setting.module.less';
-import { InformationLargeOutlined, ChevronRightOutlined } from '@vikadata/icons';
+import { InfoCircleOutlined, ChevronRightOutlined } from '@vikadata/icons';
 import { IMapToken } from './interface/map';
 import AMapLoader from '@amap/amap-jsapi-loader';
 import { Strings, t } from './i18n';
@@ -49,7 +49,7 @@ export const Setting: React.FC = () => {
 
   return isSettingOpened && meta.runtimeEnv == RuntimeEnv.Desktop ? (
     <div className={styles.settingContent}>
-      <h1>{t(Strings.map_setting)} <a href="https://help.vika.cn/docs/guide/intro-widget-location-map" target="_blank"><InformationLargeOutlined className={styles.questionIcon} size={17}/></a></h1>
+      <h1>{t(Strings.map_setting)} <a href="https://help.vika.cn/docs/guide/intro-widget-location-map" target="_blank"><InfoCircleOutlined className={styles.questionIcon} size={17}/></a></h1>
       <div style={{ display: 'flex', height: '100%' }}>
         <div style={{ flexGrow: 1, overflow: 'auto'}}>
           <div className={styles.formItem}>

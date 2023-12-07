@@ -1,5 +1,5 @@
-import { getLanguage } from '@vikadata/widget-sdk';
-import stringsConfigJson from './strings.json';
+import { getLanguage } from "@apitable/widget-sdk";
+import stringsConfigJson from "./strings.json";
 
 interface ILanguageField {
   zh_CN: string;
@@ -9,6 +9,6 @@ interface ILanguageField {
 export const Strings = stringsConfigJson.strings;
 
 export const t = (field: ILanguageField) => {
-  const lang = getLanguage().replace('-', '_');
+  const lang = getLanguage().replace("-", "_");
   return field[lang];
 };

@@ -42,7 +42,7 @@ export const getRcoresLocationAsync = (
       });
     }
     if (address && address !== "") {
-      plugins.geocoder.getLocation(address, function (status, result) {
+      plugins.geocoder.getLocation(address.replaceAll("#", "号"), function (status, result) {
         if (status === "complete" && result.info === "OK") {
           console.log("请求结果", result, status);
           const { lng, lat } = result.geocodes[0].location;

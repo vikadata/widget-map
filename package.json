@@ -4,17 +4,11 @@
   "engines": {
     "node": ">=8.x"
   },
-  "keywords": [
-    "vika",
-    "widgets",
-    "vika widgets"
-  ],
+  "keywords": ["vika", "widgets", "vika widgets"],
   "main": "./dist/index",
   "module": "./dist/index",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "license": "MIT",
   "scripts": {
     "start": "widget-cli start",
@@ -29,9 +23,9 @@
     "@amap/amap-jsapi-types": "^0.0.8",
     "@types/react": "^16.9.43",
     "@types/react-dom": "^16.9.8",
-    "@vikadata/components": "^0.0.4",
-    "@vikadata/icons": "^0.0.1",
-    "@vikadata/widget-sdk": "0.0.7",
+    "@apitable/components": "latest",
+    "@apitable/icons": "latest",
+    "@apitable/widget-sdk": "latest",
     "ahooks": "^3.1.13",
     "antd": "^4.22.1",
     "css-loader": "^6.7.1",

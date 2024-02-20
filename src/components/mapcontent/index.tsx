@@ -192,13 +192,14 @@ export const MapContent: React.FC<IMapContentProps> = (props) => {
   }
 
   const updateTextCache = (mapRecords: ISimpleRecords[]) => {
-    Message.success({
+    Message.default({
       content: t(Strings.map_loading),
       messageKey: "loadingMark",
       duration: 0,
     });
     getTextCoordinate(mapRecords);
     setIsSetTextCache(true);
+    messageAntd.destroy();
   };
 
   useEffect(() => {
@@ -206,10 +207,6 @@ export const MapContent: React.FC<IMapContentProps> = (props) => {
       messageAntd.destroy();
     }
   }, [isSetTextCache]);
-
-  const closeMessage = () => {
-    messageAntd.destroy();
-  };
 
   useEffect(() => {
     if (!plugins || !addressFieldId) {
@@ -252,10 +249,12 @@ export const MapContent: React.FC<IMapContentProps> = (props) => {
                 className={styles.antdMessageButton}
                 onClick={() => updateTextCache(newMapRecords)}
               >
-                重新加载
+                {t(Strings.reload)}
               </span>
               <CloseOutlined
-                onClick={() => closeMessage()}
+                onClick={() => {
+                  messageAntd.destroy();
+                }}
                 className={styles.antdMessageCloseButton}
                 size={10}
               />
@@ -268,7 +267,7 @@ export const MapContent: React.FC<IMapContentProps> = (props) => {
         updateTextCache(newMapRecords);
       }
     } else {
-      Message.success({
+      Message.default({
         content: t(Strings.map_loading),
         messageKey: "loadingMark",
         duration: 0,

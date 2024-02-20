@@ -37,8 +37,8 @@
         "en_US": "More settings"
     },
     "setting_api_info": {
-        "zh_CN": "填写你的高德地图账号以提高流量（选填)",
-        "en_US": "Fill in your AMAP account(optional)"
+        "zh_CN": "填写你的高德地图账号以提高流量",
+        "en_US": "Fill in your AMAP account"
     },
     "setting_api_key": {
         "zh_CN": "填写应用的Key和秘钥",

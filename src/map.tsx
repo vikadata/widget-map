@@ -5,6 +5,7 @@ import AMapLoader from "@amap/amap-jsapi-loader";
 import { IPlugins, IMapToken } from "./interface/map";
 import { useCloudStorage, useMeta } from "@apitable/widget-sdk";
 import "@amap/amap-jsapi-types";
+import { Message } from "@apitable/components";
 
 declare global {
   interface Window {
@@ -46,13 +47,13 @@ export const MapComponent: React.FC = () => {
     }
 
     window._AMapSecurityConfig = {
-      securityJsCode: mapToken.security || "e21828e25e02c281835f7b65c42fc418",
+      securityJsCode: mapToken.security || "",
     };
 
     // window.forceWebGL = true;
 
     AMapLoader.load({
-      key: mapToken.key || "e979c61a0a16f0d80286e32c5075be6a",
+      key: mapToken.key || '',
       version: "2.0",
       plugins: [
         "AMap.Geocoder",
@@ -79,6 +80,9 @@ export const MapComponent: React.FC = () => {
       })
       .catch((e) => {
         setLodingtatus(false);
+        Message.error({
+          content: e,
+        });
         console.log("地图加载失败原因---->", e);
       });
   }, [mapToken]);

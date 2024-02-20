@@ -52,13 +52,14 @@ export const Setting: React.FC = () => {
     defaultFields[0].fieldData.id,
   );
 
+  const [mapToken, setToken] = useCloudStorage<IMapToken>("mapToken");
+
   // 高德apiToken
-  const [apiToken, setApiToken] = useState<string>("");
-  const [securityJsCode, setSecurityJsCode] = useState<string>("");
+  const [apiToken, setApiToken] = useState<string>(mapToken.key || "");
+  const [securityJsCode, setSecurityJsCode] = useState<string>(mapToken.security || "");
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
 
-  const [, setToken] = useCloudStorage<IMapToken>("mapToken");
 
   const lang = getLanguage().replace("-", "_");
 

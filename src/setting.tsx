@@ -52,7 +52,10 @@ export const Setting: React.FC = () => {
     defaultFields[0].fieldData.id,
   );
 
-  const [mapToken, setToken] = useCloudStorage<IMapToken>("mapToken");
+  const [mapToken, setToken] = useCloudStorage<IMapToken>("mapToken", {
+    key: null,
+    security: null,
+  });
 
   // 高德apiToken
   const [apiToken, setApiToken] = useState<string>(mapToken.key || "");
